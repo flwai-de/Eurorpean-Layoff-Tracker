@@ -51,7 +51,7 @@ async function seed() {
   await db
     .insert(admins)
     .values({
-      email: "your-email@example.com",
+      email: "hello@flwai.de",
       name: "Admin",
       role: "admin",
     })
