@@ -4,7 +4,7 @@ export async function GET() {
   const baseUrl = process.env.NEXTAUTH_URL ?? "https://dimissio.eu";
   const response = NextResponse.redirect(`${baseUrl}/admin/login`);
 
-  const knownCookies = [
+  const cookieNames = [
     "authjs.session-token",
     "authjs.callback-url",
     "authjs.csrf-token",
@@ -14,8 +14,14 @@ export async function GET() {
     "__Host-authjs.csrf-token",
   ];
 
-  for (const name of knownCookies) {
-    response.cookies.set(name, "", { maxAge: 0, path: "/" });
+  for (const name of cookieNames) {
+    const isSecure = name.startsWith("__Secure-") || name.startsWith("__Host-");
+    response.cookies.set(name, "", {
+      maxAge: 0,
+      path: "/",
+      secure: isSecure,
+      httpOnly: true,
+    });
   }
 
   return response;

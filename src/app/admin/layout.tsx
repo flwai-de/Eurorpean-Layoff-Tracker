@@ -19,7 +19,15 @@ const navItems = [
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+
+  // No session: render without sidebar (for login page)
+  if (!session) {
+    return (
+      <html lang="en">
+        <body className="bg-neutral-950 text-white">{children}</body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">

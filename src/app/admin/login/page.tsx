@@ -1,10 +1,6 @@
-import { signIn, auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { signIn } from "@/lib/auth";
 
-export default async function AdminLoginPage() {
-  const session = await auth();
-  if (session) redirect("/admin");
-
+export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-950">
       <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-8">
