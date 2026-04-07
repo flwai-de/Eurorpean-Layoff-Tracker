@@ -88,6 +88,7 @@ function IndustryContent({
 }) {
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("industry");
+  const tLayoff = useTranslations("layoff");
   const name = locale === "de" ? industry.nameDe : industry.nameEn;
 
   return (
@@ -132,7 +133,7 @@ function IndustryContent({
       {/* Back */}
       <div className="mt-8">
         <Link href="/" className="text-sm text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-          &larr; {useTranslations("layoff")("backToOverview")}
+          &larr; {tLayoff("backToOverview")}
         </Link>
       </div>
     </div>

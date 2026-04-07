@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
@@ -44,9 +45,12 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
     >
       {/* Logo / Initials */}
       {layoff.company.logoUrl ? (
-        <img
+        <Image
           src={layoff.company.logoUrl}
           alt={layoff.company.name}
+          width={40}
+          height={40}
+          unoptimized
           className="h-10 w-10 shrink-0 rounded-lg object-contain"
         />
       ) : (

@@ -71,6 +71,7 @@ function CountryContent({
 }) {
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("country");
+  const tLayoff = useTranslations("layoff");
   const name = getCountryName(code, locale);
   const flag = getCountryFlag(code);
 
@@ -101,7 +102,7 @@ function CountryContent({
       {/* Back */}
       <div className="mt-8">
         <Link href="/" className="text-sm text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-          &larr; {useTranslations("layoff")("backToOverview")}
+          &larr; {tLayoff("backToOverview")}
         </Link>
       </div>
     </div>

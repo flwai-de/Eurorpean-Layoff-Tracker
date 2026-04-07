@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -62,6 +63,7 @@ function LayoffContent({ layoff }: { layoff: NonNullable<Awaited<ReturnType<type
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("layoff");
   const tReasons = useTranslations("reasons");
+  const tCommon = useTranslations("common");
 
   const title = locale === "de" ? layoff.titleDe : layoff.titleEn;
   const summary = locale === "de" ? layoff.summaryDe : layoff.summaryEn;
@@ -95,7 +97,7 @@ function LayoffContent({ layoff }: { layoff: NonNullable<Awaited<ReturnType<type
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-neutral-400">
         <Link href="/" className="transition hover:text-neutral-900 dark:hover:text-white">
-          {useTranslations("common")("home")}
+          {tCommon("home")}
         </Link>
         <span>/</span>
         <span>{t("breadcrumbLayoffs")}</span>
@@ -106,7 +108,7 @@ function LayoffContent({ layoff }: { layoff: NonNullable<Awaited<ReturnType<type
       {/* Company header */}
       <div className="mb-6 flex items-center gap-4">
         {layoff.company.logoUrl ? (
-          <img src={layoff.company.logoUrl} alt={layoff.company.name} className="h-14 w-14 rounded-xl object-contain" />
+          <Image src={layoff.company.logoUrl} alt={layoff.company.name} width={56} height={56} unoptimized className="h-14 w-14 rounded-xl object-contain" />
         ) : (
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-neutral-100 text-lg font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
             {initials}

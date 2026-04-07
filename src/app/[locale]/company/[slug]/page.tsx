@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -41,6 +42,8 @@ function CompanyContent({ company }: { company: NonNullable<Awaited<ReturnType<t
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("company");
   const tType = useTranslations("companyType");
+  const tHome = useTranslations("home");
+  const tLayoff = useTranslations("layoff");
 
   const industryName = locale === "de" ? company.industry.nameDe : company.industry.nameEn;
   const description = locale === "de" ? company.descriptionDe : company.descriptionEn;
@@ -77,7 +80,7 @@ function CompanyContent({ company }: { company: NonNullable<Awaited<ReturnType<t
       {/* Header */}
       <div className="flex items-start gap-5">
         {company.logoUrl ? (
-          <img src={company.logoUrl} alt={company.name} className="h-16 w-16 rounded-xl object-contain" />
+          <Image src={company.logoUrl} alt={company.name} width={64} height={64} unoptimized className="h-16 w-16 rounded-xl object-contain" />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-neutral-100 text-xl font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
             {initials}
@@ -130,7 +133,7 @@ function CompanyContent({ company }: { company: NonNullable<Awaited<ReturnType<t
         </h2>
         {company.layoffs.length === 0 ? (
           <p className="mt-4 text-sm text-neutral-400">
-            {useTranslations("home")("noLayoffs")}
+            {tHome("noLayoffs")}
           </p>
         ) : (
           <div className="mt-4 space-y-3">
@@ -156,7 +159,7 @@ function CompanyContent({ company }: { company: NonNullable<Awaited<ReturnType<t
       {/* Back */}
       <div className="mt-8">
         <Link href="/" className="text-sm text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
-          &larr; {useTranslations("layoff")("backToOverview")}
+          &larr; {tLayoff("backToOverview")}
         </Link>
       </div>
     </div>

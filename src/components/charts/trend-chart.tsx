@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart,
   Bar,
@@ -27,9 +27,10 @@ const MONTHS_EN: Record<string, string> = {
   "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
 };
 
-function formatMonth(yyyymm: string): string {
+function formatMonth(yyyymm: string, locale: string): string {
   const mm = yyyymm.split("-")[1];
-  return MONTHS_EN[mm] ?? mm;
+  const map = locale === "de" ? MONTHS_DE : MONTHS_EN;
+  return map[mm] ?? mm;
 }
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
@@ -52,6 +53,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 
 export default function TrendChart({ data }: TrendChartProps) {
   const t = useTranslations("home");
+  const locale = useLocale();
 
   if (data.length === 0) {
     return (
@@ -68,7 +70,7 @@ export default function TrendChart({ data }: TrendChartProps) {
 
   const chartData = data.map((d) => ({
     ...d,
-    label: formatMonth(d.month),
+    label: formatMonth(d.month, locale),
   }));
 
   return (
