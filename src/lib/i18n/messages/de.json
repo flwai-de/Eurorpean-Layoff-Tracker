@@ -39,15 +39,22 @@
   },
   "layoff": {
     "affected": "Betroffene",
+    "affectedPercent": "{percent}% der Belegschaft",
     "date": "Datum",
     "country": "Land",
     "city": "Stadt",
     "industry": "Branche",
     "reason": "Grund",
     "severance": "Abfindung",
+    "severanceWeeks": "{weeks} Wochen",
     "source": "Quelle",
+    "sourceLink": "Zur Originalquelle",
     "summary": "Zusammenfassung",
-    "backToOverview": "Zurück zur Übersicht"
+    "totalEmployees": "Gesamtbelegschaft",
+    "backToOverview": "Zurück zur Übersicht",
+    "breadcrumbLayoffs": "Layoffs",
+    "metaTitle": "{company} entlässt {count} Mitarbeiter | Dimissio",
+    "metaTitleNoCount": "{company} — Layoff | Dimissio"
   },
   "company": {
     "industry": "Branche",
@@ -56,15 +63,31 @@
     "employees": "Mitarbeiter",
     "website": "Website",
     "type": "Typ",
-    "layoffHistory": "Layoff-Historie"
+    "layoffHistory": "Layoff-Historie",
+    "totalLayoffs": "Layoffs gesamt",
+    "totalAffected": "Betroffene gesamt",
+    "metaTitle": "{company} — Layoff-Historie | Dimissio"
+  },
+  "companyType": {
+    "startup": "Startup",
+    "scaleup": "Scale-up",
+    "public": "Börsennotiert",
+    "enterprise": "Konzern",
+    "government": "Öffentlicher Sektor"
   },
   "industry": {
     "heading": "Layoffs in der Branche {industry}",
-    "layoffCount": "{count} Layoffs"
+    "layoffCount": "{count} Layoffs",
+    "totalAffected": "{count} Betroffene",
+    "subIndustries": "Unterbranchen",
+    "metaTitle": "Layoffs in {industry} | Dimissio"
   },
   "country": {
     "heading": "Layoffs in {country}",
-    "layoffCount": "{count} Layoffs"
+    "layoffCount": "{count} Layoffs",
+    "totalAffected": "{count} Betroffene",
+    "disclaimer": "Entlassungen, die in {country} stattfinden — unabhängig vom Firmensitz.",
+    "metaTitle": "Layoffs in {country} | Dimissio"
   },
   "filters": {
     "country": "Land",
