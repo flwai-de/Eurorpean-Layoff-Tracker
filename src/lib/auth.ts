@@ -23,7 +23,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         .where(eq(admins.email, profile.email))
         .limit(1);
       if (!admin) return false;
-      // Link GitHub ID on first login
       if (!admin.githubId && profile.id) {
         await db
           .update(admins)
@@ -32,17 +31,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return true;
     },
-    async session({ session }) {
-      if (session.user?.email) {
+    async jwt({ token, profile }) {
+      // On sign-in, persist admin id and role into the JWT
+      if (profile?.email) {
         const [admin] = await db
           .select()
           .from(admins)
-          .where(eq(admins.email, session.user.email))
+          .where(eq(admins.email, profile.email))
           .limit(1);
         if (admin) {
-          session.user.id = admin.id;
-          (session.user as typeof session.user & { role: string }).role = admin.role;
+          token.adminId = admin.id;
+          token.adminRole = admin.role;
+          token.email = profile.email;
         }
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token.adminId) {
+        session.user.id = token.adminId as string;
+        (session.user as typeof session.user & { role: string }).role = token.adminRole as string;
+      }
+      if (token.email) {
+        session.user.email = token.email as string;
       }
       return session;
     },
