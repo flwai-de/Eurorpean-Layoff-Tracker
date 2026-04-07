@@ -20,7 +20,7 @@ export const industries = pgTable("industries", {
   slug: text("slug").primaryKey(),
   nameEn: text("name_en").notNull(),
   nameDe: text("name_de").notNull(),
-  parentSlug: text("parent_slug").references((): ReturnType<typeof text> => industries.slug),
+  parentSlug: text("parent_slug"),
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
