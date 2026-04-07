@@ -106,6 +106,14 @@
     "submitButton": "Abonnieren",
     "gdprNotice": "Mit der Anmeldung stimmen Sie zu, dass wir Ihnen regelmäßig Updates per E-Mail senden. Sie können sich jederzeit abmelden. Weitere Informationen finden Sie in unserer Datenschutzerklärung."
   },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die angeforderte Seite existiert nicht oder wurde entfernt.",
+    "backHome": "Zurück zur Startseite"
+  },
+  "loading": {
+    "text": "Wird geladen..."
+  },
   "reasons": {
     "restructuring": "Restrukturierung",
     "cost_cutting": "Kostensenkung",

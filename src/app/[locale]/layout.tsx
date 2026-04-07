@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -16,13 +17,29 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
-}) {
+}): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "common" });
 
   return {
-    title: t("title"),
+    metadataBase: new URL("https://dimissio.eu"),
+    title: {
+      default: t("title"),
+      template: "%s | Dimissio",
+    },
     description: t("description"),
+    openGraph: {
+      siteName: "Dimissio",
+      type: "website",
+      images: [{ url: "/og-image.svg", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+    },
+    icons: { icon: "/favicon.ico" },
+    alternates: {
+      languages: { de: `/de`, en: `/en` },
+    },
   };
 }
 

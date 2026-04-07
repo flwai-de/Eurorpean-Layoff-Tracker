@@ -106,6 +106,14 @@
     "submitButton": "Subscribe",
     "gdprNotice": "By subscribing, you agree to receive regular email updates. You can unsubscribe at any time. For more information, see our Privacy Policy."
   },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The page you are looking for does not exist or has been removed.",
+    "backHome": "Back to Home"
+  },
+  "loading": {
+    "text": "Loading..."
+  },
   "reasons": {
     "restructuring": "Restructuring",
     "cost_cutting": "Cost Cutting",
