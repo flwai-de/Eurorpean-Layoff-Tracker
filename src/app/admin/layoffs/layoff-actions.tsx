@@ -2,24 +2,42 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { verifyLayoff, rejectLayoff } from "@/actions/layoffs";
 
 export default function LayoffActions({ id, status }: { id: string; status: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function handleVerify() {
-    startTransition(async () => { await verifyLayoff(id); router.refresh(); });
+    setError(null);
+    startTransition(async () => {
+      const result = await verifyLayoff(id);
+      if (!result.success) {
+        setError(result.error ?? "Verify failed");
+      } else {
+        router.refresh();
+      }
+    });
   }
 
   function handleReject() {
     if (!confirm("Reject this layoff?")) return;
-    startTransition(async () => { await rejectLayoff(id); router.refresh(); });
+    setError(null);
+    startTransition(async () => {
+      const result = await rejectLayoff(id);
+      if (!result.success) {
+        setError(result.error ?? "Reject failed");
+      } else {
+        router.refresh();
+      }
+    });
   }
 
   return (
     <div className="flex items-center justify-end gap-2">
+      {error && <span className="text-xs text-red-400">{error}</span>}
       {status === "unverified" && (
         <>
           <button onClick={handleVerify} disabled={isPending} className="rounded bg-green-800/60 px-2.5 py-1 text-xs text-green-300 transition hover:bg-green-800 disabled:opacity-50">✓ Verify</button>
