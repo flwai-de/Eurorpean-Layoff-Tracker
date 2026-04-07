@@ -11,6 +11,7 @@ import {
   getTrendingLayoffs,
 } from "@/lib/queries/public";
 import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
+import { generateLayoffTitle } from "@/lib/utils/generate-title";
 import HeroStats from "@/components/layoffs/hero-stats";
 import TrendChart from "@/components/charts/trend-chart";
 import LayoffFeed from "@/components/layoffs/layoff-feed";
@@ -123,7 +124,13 @@ function TrendingSidebar({
       ) : (
         <ul className="mt-4 space-y-3">
           {trending.map((layoff, i) => {
-            const title = locale === "de" ? layoff.titleDe : layoff.titleEn;
+            const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
+            const title = rawTitle ?? generateLayoffTitle({
+              companyName: layoff.company.name,
+              affectedCount: layoff.affectedCount,
+              affectedPercentage: layoff.affectedPercentage,
+              isShutdown: layoff.isShutdown,
+            }, locale);
             return (
               <li key={layoff.id}>
                 <Link

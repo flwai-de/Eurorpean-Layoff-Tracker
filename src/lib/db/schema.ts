@@ -118,8 +118,8 @@ export const layoffs = pgTable(
     severanceDetailsDe: text("severance_details_de"),
     sourceUrl: text("source_url").notNull(),
     sourceName: text("source_name"),
-    titleEn: text("title_en").notNull(),
-    titleDe: text("title_de").notNull(),
+    titleEn: text("title_en"),
+    titleDe: text("title_de"),
     summaryEn: text("summary_en"),
     summaryDe: text("summary_de"),
     status: text("status", { enum: ["unverified", "verified", "rejected"] })

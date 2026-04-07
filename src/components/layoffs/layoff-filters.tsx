@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
-import { europeanCountries, getCountryName } from "@/lib/utils/countries";
+import { europeanCountries, regionCodes, getCountryName } from "@/lib/utils/countries";
 
 interface IndustryOption {
   slug: string;
@@ -52,11 +52,14 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
 
   const hasFilters = currentCountry || currentIndustry || currentPeriod !== "all";
 
-  const countries = Array.from(europeanCountries.entries()).sort((a, b) => {
-    const nameA = locale === "de" ? a[1].nameDe : a[1].nameEn;
-    const nameB = locale === "de" ? b[1].nameDe : b[1].nameEn;
-    return nameA.localeCompare(nameB, locale);
-  });
+  const regions = Array.from(europeanCountries.entries()).filter(([code]) => regionCodes.has(code));
+  const countries = Array.from(europeanCountries.entries())
+    .filter(([code]) => !regionCodes.has(code))
+    .sort((a, b) => {
+      const nameA = locale === "de" ? a[1].nameDe : a[1].nameEn;
+      const nameB = locale === "de" ? b[1].nameDe : b[1].nameEn;
+      return nameA.localeCompare(nameB, locale);
+    });
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -67,6 +70,12 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
         className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
       >
         <option value="">{t("country")}: {t("all")}</option>
+        {regions.map(([code]) => (
+          <option key={code} value={code}>
+            {getCountryName(code, locale)}
+          </option>
+        ))}
+        <option disabled>───────────</option>
         {countries.map(([code]) => (
           <option key={code} value={code}>
             {getCountryName(code, locale)}

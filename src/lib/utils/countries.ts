@@ -4,7 +4,11 @@ interface CountryInfo {
   flag: string;
 }
 
+export const regionCodes = new Set(["EU", "WW"]);
+
 export const europeanCountries = new Map<string, CountryInfo>([
+  ["EU", { nameEn: "Europe", nameDe: "Europa", flag: "\u{1F1EA}\u{1F1FA}" }],
+  ["WW", { nameEn: "Worldwide", nameDe: "Weltweit", flag: "\u{1F30D}" }],
   ["DE", { nameEn: "Germany", nameDe: "Deutschland", flag: "\u{1F1E9}\u{1F1EA}" }],
   ["AT", { nameEn: "Austria", nameDe: "\u00D6sterreich", flag: "\u{1F1E6}\u{1F1F9}" }],
   ["CH", { nameEn: "Switzerland", nameDe: "Schweiz", flag: "\u{1F1E8}\u{1F1ED}" }],

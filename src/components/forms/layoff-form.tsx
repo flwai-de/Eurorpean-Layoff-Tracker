@@ -3,12 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useTransition, useState, useEffect, useRef } from "react";
 import { searchCompanies } from "@/actions/companies";
+import { generateLayoffTitle } from "@/lib/utils/generate-title";
 import type { Layoff } from "@/lib/db/schema";
 
 type Props = {
   layoff?: Layoff & { companyName?: string };
   action: (formData: FormData) => Promise<{ success: boolean; error?: string; data?: { id: string } }>;
 };
+
+const REGIONS = [
+  { code: "EU", name: "Europe (EU-wide)" },
+  { code: "WW", name: "Worldwide" },
+];
 
 const EUROPEAN_COUNTRIES = [
   { code: "AT", name: "Austria" }, { code: "BE", name: "Belgium" }, { code: "BG", name: "Bulgaria" },
@@ -45,6 +51,21 @@ export default function LayoffForm({ layoff, action }: Props) {
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Title preview state
+  const [affectedCount, setAffectedCount] = useState(layoff?.affectedCount ?? null);
+  const [affectedPercentage, setAffectedPercentage] = useState(layoff?.affectedPercentage ?? null);
+  const [isShutdown, setIsShutdown] = useState(layoff?.isShutdown ?? false);
+  const [showTitleOverride, setShowTitleOverride] = useState(!!(layoff?.titleEn || layoff?.titleDe));
+
+  const previewEn = generateLayoffTitle(
+    { companyName: companyQuery || "Company", affectedCount, affectedPercentage, isShutdown },
+    "en",
+  );
+  const previewDe = generateLayoffTitle(
+    { companyName: companyQuery || "Company", affectedCount, affectedPercentage, isShutdown },
+    "de",
+  );
 
   useEffect(() => {
     if (companyQuery.length < 2) {
@@ -101,7 +122,7 @@ export default function LayoffForm({ layoff, action }: Props) {
             className={inputCls}
           />
           {companyId && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400">✓</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400">&#10003;</span>
           )}
           {showSuggestions && suggestions.length > 0 && (
             <ul className="absolute z-10 mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-800 py-1 shadow-lg">
@@ -126,13 +147,31 @@ export default function LayoffForm({ layoff, action }: Props) {
       </Field>
       <input type="hidden" name="companyId" value={companyId} />
 
-      {/* Titles */}
-      <Field label="Title (EN) *">
-        <input name="titleEn" defaultValue={layoff?.titleEn} required maxLength={200} className={inputCls} />
-      </Field>
-      <Field label="Title (DE) *">
-        <input name="titleDe" defaultValue={layoff?.titleDe} required maxLength={200} className={inputCls} />
-      </Field>
+      {/* Title Preview */}
+      <div className="rounded-lg border border-neutral-700 bg-neutral-800/50 p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Auto-generated title</p>
+        <p className="mt-1 text-sm text-white">EN: {previewEn}</p>
+        <p className="mt-0.5 text-sm text-white">DE: {previewDe}</p>
+        <button
+          type="button"
+          onClick={() => setShowTitleOverride(!showTitleOverride)}
+          className="mt-2 text-xs text-neutral-400 underline transition hover:text-neutral-200"
+        >
+          {showTitleOverride ? "Hide title override" : "Override title (optional)"}
+        </button>
+      </div>
+
+      {/* Title Override (optional) */}
+      {showTitleOverride && (
+        <>
+          <Field label="Title Override (EN)">
+            <input name="titleEn" defaultValue={layoff?.titleEn ?? ""} maxLength={200} placeholder="Leave empty for auto-generated title" className={inputCls} />
+          </Field>
+          <Field label="Title Override (DE)">
+            <input name="titleDe" defaultValue={layoff?.titleDe ?? ""} maxLength={200} placeholder="Leave empty for auto-generated title" className={inputCls} />
+          </Field>
+        </>
+      )}
 
       {/* Date + Location */}
       <div className="grid grid-cols-3 gap-4">
@@ -142,6 +181,10 @@ export default function LayoffForm({ layoff, action }: Props) {
         <Field label="Country of Layoff *">
           <select name="country" defaultValue={layoff?.country} required className={inputCls}>
             <option value="">Select…</option>
+            {REGIONS.map((r) => (
+              <option key={r.code} value={r.code}>{r.name}</option>
+            ))}
+            <option disabled>───────────</option>
             {EUROPEAN_COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>{c.name}</option>
             ))}
@@ -155,10 +198,23 @@ export default function LayoffForm({ layoff, action }: Props) {
       {/* Numbers */}
       <div className="grid grid-cols-3 gap-4">
         <Field label="Affected Count">
-          <input name="affectedCount" type="number" defaultValue={layoff?.affectedCount ?? ""} className={inputCls} />
+          <input
+            name="affectedCount"
+            type="number"
+            defaultValue={layoff?.affectedCount ?? ""}
+            onChange={(e) => setAffectedCount(e.target.value ? Number(e.target.value) : null)}
+            className={inputCls}
+          />
         </Field>
         <Field label="Affected %">
-          <input name="affectedPercentage" type="number" step="0.01" defaultValue={layoff?.affectedPercentage ?? ""} className={inputCls} />
+          <input
+            name="affectedPercentage"
+            type="number"
+            step="0.01"
+            defaultValue={layoff?.affectedPercentage ?? ""}
+            onChange={(e) => setAffectedPercentage(e.target.value || null)}
+            className={inputCls}
+          />
         </Field>
         <Field label="Total Employees">
           <input name="totalEmployeesAtTime" type="number" defaultValue={layoff?.totalEmployeesAtTime ?? ""} className={inputCls} />
@@ -181,7 +237,13 @@ export default function LayoffForm({ layoff, action }: Props) {
       </div>
 
       <label className="flex items-center gap-2 text-sm">
-        <input name="isShutdown" type="checkbox" defaultChecked={layoff?.isShutdown} className="rounded border-neutral-600" />
+        <input
+          name="isShutdown"
+          type="checkbox"
+          defaultChecked={layoff?.isShutdown}
+          onChange={(e) => setIsShutdown(e.target.checked)}
+          className="rounded border-neutral-600"
+        />
         Company shutdown (full closure)
       </label>
 

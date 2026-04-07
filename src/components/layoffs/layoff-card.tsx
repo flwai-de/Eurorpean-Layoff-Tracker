@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
+import { generateLayoffTitle } from "@/lib/utils/generate-title";
 import type { LayoffWithCompany } from "@/lib/queries/public";
 
 interface LayoffCardProps {
@@ -28,7 +29,13 @@ function getRelativeTime(dateStr: string, locale: string): string {
 export default function LayoffCard({ layoff }: LayoffCardProps) {
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("layoff");
-  const title = locale === "de" ? layoff.titleDe : layoff.titleEn;
+  const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
+  const title = rawTitle ?? generateLayoffTitle({
+    companyName: layoff.company.name,
+    affectedCount: layoff.affectedCount,
+    affectedPercentage: layoff.affectedPercentage,
+    isShutdown: layoff.isShutdown,
+  }, locale);
   const flag = getCountryFlag(layoff.country);
   const countryName = getCountryName(layoff.country, locale);
   const initials = layoff.company.name

@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { getLayoffById } from "@/lib/queries/public";
 import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
+import { generateLayoffTitle } from "@/lib/utils/generate-title";
 import ViewCounter from "./view-counter";
 
 interface Props {
@@ -65,7 +66,13 @@ function LayoffContent({ layoff }: { layoff: NonNullable<Awaited<ReturnType<type
   const tReasons = useTranslations("reasons");
   const tCommon = useTranslations("common");
 
-  const title = locale === "de" ? layoff.titleDe : layoff.titleEn;
+  const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
+  const title = rawTitle ?? generateLayoffTitle({
+    companyName: layoff.company.name,
+    affectedCount: layoff.affectedCount,
+    affectedPercentage: layoff.affectedPercentage,
+    isShutdown: layoff.isShutdown,
+  }, locale);
   const summary = locale === "de" ? layoff.summaryDe : layoff.summaryEn;
   const severanceDetails = locale === "de" ? layoff.severanceDetailsDe : layoff.severanceDetailsEn;
   const flag = getCountryFlag(layoff.country);
