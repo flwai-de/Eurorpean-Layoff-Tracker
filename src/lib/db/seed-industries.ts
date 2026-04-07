@@ -32,6 +32,10 @@ const data: (typeof industries.$inferInsert)[] = [
   { slug: "education", nameEn: "Education", nameDe: "Bildung", sortOrder: 19 },
   { slug: "pharma", nameEn: "Pharma & Biotech", nameDe: "Pharma & Biotech", sortOrder: 20 },
   { slug: "defense", nameEn: "Defense & Aerospace", nameDe: "Verteidigung & Luft/Raumfahrt", sortOrder: 21 },
+  { slug: "consumer_goods", nameEn: "Consumer Goods", nameDe: "Konsumgüter", sortOrder: 0 },
+  { slug: "chemicals", nameEn: "Chemicals", nameDe: "Chemie", sortOrder: 0 },
+  { slug: "semiconductors", nameEn: "Semiconductors", nameDe: "Halbleiter", parentSlug: "technology", sortOrder: 0 },
+  { slug: "mining_steel", nameEn: "Mining & Steel", nameDe: "Bergbau & Stahl", parentSlug: "manufacturing", sortOrder: 0 },
 ];
 
 async function main() {
