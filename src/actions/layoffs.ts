@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { layoffs, companies, admins } from "@/lib/db/schema";
+import { layoffs, companies } from "@/lib/db/schema";
 import { eq, desc, count, and, sql, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -30,11 +30,13 @@ const layoffSchema = z.object({
 type ActionResult<T = undefined> = { success: boolean; error?: string; data?: T };
 type StatusFilter = "all" | "unverified" | "verified" | "rejected";
 
-async function getAdminId(): Promise<string | null> {
-  const session = await auth();
+/** Returns admin UUID if available from JWT, or null */
+function getAdminIdFromSession(session: Awaited<ReturnType<typeof auth>>): string | null {
   if (!session?.user) return null;
-  // session.user.id is set in the session callback in auth.ts
-  return (session.user as { id?: string }).id ?? null;
+  const user = session.user as { id?: string };
+  // id is a valid UUID if set by our jwt callback
+  if (user.id && user.id.includes("-")) return user.id;
+  return null;
 }
 
 export async function getLayoffs(status: StatusFilter = "all", search?: string, page = 1, perPage = 25) {
@@ -44,7 +46,6 @@ export async function getLayoffs(status: StatusFilter = "all", search?: string, 
   const offset = (page - 1) * perPage;
   const conditions = [];
   if (status !== "all") conditions.push(eq(layoffs.status, status));
-
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [items, [total]] = await Promise.all([
@@ -163,8 +164,11 @@ export async function updateLayoff(id: string, formData: FormData): Promise<Acti
 }
 
 export async function verifyLayoff(id: string): Promise<ActionResult> {
-  const adminId = await getAdminId();
-  if (!adminId) return { success: false, error: "Unauthorized" };
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  // verifiedBy is nullable — set it if we have an admin UUID, skip if not
+  const adminId = getAdminIdFromSession(session);
 
   await db.update(layoffs).set({
     status: "verified",
@@ -177,8 +181,10 @@ export async function verifyLayoff(id: string): Promise<ActionResult> {
 }
 
 export async function rejectLayoff(id: string): Promise<ActionResult> {
-  const adminId = await getAdminId();
-  if (!adminId) return { success: false, error: "Unauthorized" };
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const adminId = getAdminIdFromSession(session);
 
   await db.update(layoffs).set({
     status: "rejected",
