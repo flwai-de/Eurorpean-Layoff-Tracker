@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import SignOutButton from "@/components/layout/sign-out-button";
 import "@/app/globals.css";
 
