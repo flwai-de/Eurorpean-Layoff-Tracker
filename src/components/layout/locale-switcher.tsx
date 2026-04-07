@@ -18,19 +18,19 @@ export default function LocaleSwitcher() {
         onClick={() => switchLocale("de")}
         className={`px-1.5 py-0.5 transition ${
           locale === "de"
-            ? "font-bold text-white"
-            : "text-neutral-400 hover:text-white"
+            ? "font-bold text-neutral-900 dark:text-white"
+            : "text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
         }`}
       >
         DE
       </button>
-      <span className="text-neutral-600">|</span>
+      <span className="text-neutral-300 dark:text-neutral-600">|</span>
       <button
         onClick={() => switchLocale("en")}
         className={`px-1.5 py-0.5 transition ${
           locale === "en"
-            ? "font-bold text-white"
-            : "text-neutral-400 hover:text-white"
+            ? "font-bold text-neutral-900 dark:text-white"
+            : "text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
         }`}
       >
         EN
