@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import "@/app/globals.css";
 
@@ -39,15 +39,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </nav>
             <div className="border-t border-neutral-800 px-4 py-4">
               <p className="mb-3 truncate text-xs text-neutral-400">{session.user?.email ?? "Admin"}</p>
-              <form action={async () => {
-                "use server";
-                await signOut();
-              }}>
-                <button type="submit"
-                  className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white">
-                  Sign Out
-                </button>
-              </form>
+              <a href="/api/auth/signout"
+                className="block w-full rounded-lg border border-neutral-700 px-3 py-2 text-center text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white">
+                Sign Out
+              </a>
             </div>
           </aside>
           <main className="flex-1 overflow-y-auto p-8">{children}</main>
