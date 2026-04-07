@@ -31,7 +31,7 @@ type ActionResult<T = undefined> = { success: boolean; error?: string; data?: T 
 type StatusFilter = "all" | "unverified" | "verified" | "rejected";
 
 /** Returns admin UUID if available from JWT, or null */
-function getAdminIdFromSession(session: Awaited<ReturnType<typeof auth>>): string | null {
+function getAdminIdFromSession(session: { user?: { id?: string } } | null): string | null {
   if (!session?.user) return null;
   const user = session.user as { id?: string };
   // id is a valid UUID if set by our jwt callback
