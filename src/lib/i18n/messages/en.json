@@ -1,11 +1,11 @@
 {
   "common": {
     "title": "Dimissio — European Layoff Tracker",
-    "description": "Tracking mass layoffs across Europe, across all industries.",
+    "description": "Tracking layoffs across Europe, across all industries.",
     "home": "Home",
     "newsletter": "Newsletter",
     "submitTip": "Submit a Tip",
-    "footerText": "Dimissio tracks mass layoffs across Europe.",
+    "footerText": "Dimissio tracks layoffs across Europe.",
     "privacy": "Privacy Policy",
     "imprint": "Imprint",
     "apiDocs": "API Docs",
@@ -23,7 +23,7 @@
     "privacy": "Privacy Policy"
   },
   "home": {
-    "heroHeadline": "European Mass Layoffs at a Glance",
+    "heroHeadline": "European Layoffs at a Glance",
     "totalLayoffs": "Total Layoffs",
     "totalAffected": "People Affected",
     "thisMonth": "This Month",

@@ -1,11 +1,11 @@
 {
   "common": {
     "title": "Dimissio — European Layoff Tracker",
-    "description": "Massenentlassungen in Europa, branchenübergreifend verfolgt und analysiert.",
+    "description": "Entlassungen in Europa, branchenübergreifend verfolgt und analysiert.",
     "home": "Startseite",
     "newsletter": "Newsletter",
     "submitTip": "Tipp einreichen",
-    "footerText": "Dimissio trackt Massenentlassungen in ganz Europa.",
+    "footerText": "Dimissio trackt Entlassungen in ganz Europa.",
     "privacy": "Datenschutz",
     "imprint": "Impressum",
     "apiDocs": "API Docs",
@@ -23,7 +23,7 @@
     "privacy": "Datenschutz"
   },
   "home": {
-    "heroHeadline": "Europäische Massenentlassungen im Überblick",
+    "heroHeadline": "Europäische Entlassungen im Überblick",
     "totalLayoffs": "Layoffs gesamt",
     "totalAffected": "Betroffene",
     "thisMonth": "Diesen Monat",
