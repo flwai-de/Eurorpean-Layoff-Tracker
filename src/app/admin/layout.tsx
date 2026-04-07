@@ -1,5 +1,5 @@
-import "@/app/globals.css";
 import type { ReactNode } from "react";
+import "@/app/globals.css";
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
