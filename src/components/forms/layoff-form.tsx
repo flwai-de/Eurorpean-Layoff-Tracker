@@ -44,7 +44,7 @@ export default function LayoffForm({ layoff, action }: Props) {
   const [companyQuery, setCompanyQuery] = useState(layoff?.companyName ?? "");
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (companyQuery.length < 2) {
