@@ -15,7 +15,7 @@ import { cache } from "@/lib/utils/cache";
 // Types
 // ============================================================
 
-type LayoffWithCompany = Layoff & {
+export type LayoffWithCompany = Layoff & {
   company: Pick<Company, "name" | "slug" | "logoUrl" | "industrySlug" | "countryHq">;
 };
 

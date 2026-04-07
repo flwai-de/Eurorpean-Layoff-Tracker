@@ -30,7 +30,12 @@
     "thisWeek": "Diese Woche",
     "recentTitle": "Neueste Layoffs",
     "trendingTitle": "Meistgelesen",
-    "chartTitle": "Trend der letzten 12 Monate"
+    "chartTitle": "Trend der letzten 12 Monate",
+    "noData": "Noch keine Daten verfügbar",
+    "noLayoffs": "Noch keine Layoffs erfasst.",
+    "page": "Seite {current} von {total}",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter"
   },
   "layoff": {
     "affected": "Betroffene",
@@ -69,7 +74,8 @@
     "lastWeek": "Letzte Woche",
     "lastMonth": "Letzter Monat",
     "last3Months": "Letzte 3 Monate",
-    "lastYear": "Letztes Jahr"
+    "lastYear": "Letztes Jahr",
+    "reset": "Zurücksetzen"
   },
   "newsletter": {
     "subscribe": "Newsletter abonnieren",

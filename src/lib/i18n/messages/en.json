@@ -30,7 +30,12 @@
     "thisWeek": "This Week",
     "recentTitle": "Recent Layoffs",
     "trendingTitle": "Most Viewed",
-    "chartTitle": "Trend over the Last 12 Months"
+    "chartTitle": "Trend over the Last 12 Months",
+    "noData": "No data available yet",
+    "noLayoffs": "No layoffs recorded yet.",
+    "page": "Page {current} of {total}",
+    "prevPage": "Previous",
+    "nextPage": "Next"
   },
   "layoff": {
     "affected": "Affected",
@@ -69,7 +74,8 @@
     "lastWeek": "Last Week",
     "lastMonth": "Last Month",
     "last3Months": "Last 3 Months",
-    "lastYear": "Last Year"
+    "lastYear": "Last Year",
+    "reset": "Reset"
   },
   "newsletter": {
     "subscribe": "Subscribe to Newsletter",
