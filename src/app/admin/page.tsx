@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { getDashboardStats } from "@/actions/layoffs";
 
 export default async function AdminDashboardPage() {
+  const session = await auth();
+  if (!session) redirect("/admin/login");
+
   const stats = await getDashboardStats();
 
   const cards = [
