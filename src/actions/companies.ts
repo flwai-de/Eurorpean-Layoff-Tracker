@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { companies, industries } from "@/lib/db/schema";
-import { eq, ilike, desc, count, sql } from "drizzle-orm";
+import { eq, ilike, desc, count } from "drizzle-orm";
 import { z } from "zod";
 import { generateSlug } from "@/lib/utils/slug";
 import { auth } from "@/lib/auth";
@@ -27,7 +27,6 @@ export async function getCompanies(search?: string, page = 1, perPage = 25) {
   if (!session) return { success: false, error: "Unauthorized" } as const;
 
   const offset = (page - 1) * perPage;
-
   const where = search ? ilike(companies.name, `%${search}%`) : undefined;
 
   const [items, [total]] = await Promise.all([
@@ -47,10 +46,7 @@ export async function getCompanies(search?: string, page = 1, perPage = 25) {
       .orderBy(desc(companies.createdAt))
       .limit(perPage)
       .offset(offset),
-    db
-      .select({ count: count() })
-      .from(companies)
-      .where(where),
+    db.select({ count: count() }).from(companies).where(where),
   ]);
 
   return { success: true, data: { items, total: total.count, page, perPage } };
@@ -60,12 +56,7 @@ export async function getCompanyById(id: string) {
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" } as const;
 
-  const [company] = await db
-    .select()
-    .from(companies)
-    .where(eq(companies.id, id))
-    .limit(1);
-
+  const [company] = await db.select().from(companies).where(eq(companies.id, id)).limit(1);
   if (!company) return { success: false, error: "Company not found" } as const;
   return { success: true, data: company };
 }
@@ -81,7 +72,6 @@ export async function createCompany(formData: FormData): Promise<ActionResult<{ 
   const data = parsed.data;
   const slug = generateSlug(data.name);
 
-  // Check duplicate slug
   const [existing] = await db.select({ id: companies.id }).from(companies).where(eq(companies.slug, slug)).limit(1);
   if (existing) return { success: false, error: `Company with slug "${slug}" already exists` };
 
@@ -141,14 +131,12 @@ export async function searchCompanies(query: string) {
 
   if (query.length < 2) return [];
 
-  const results = await db
+  return db
     .select({ id: companies.id, name: companies.name, slug: companies.slug })
     .from(companies)
     .where(ilike(companies.name, `%${query}%`))
     .orderBy(companies.name)
     .limit(10);
-
-  return results;
 }
 
 export async function getIndustryOptions() {

@@ -28,49 +28,29 @@ const layoffSchema = z.object({
 });
 
 type ActionResult<T = undefined> = { success: boolean; error?: string; data?: T };
-
 type StatusFilter = "all" | "unverified" | "verified" | "rejected";
 
-export async function getLayoffs(
-  status: StatusFilter = "all",
-  search?: string,
-  page = 1,
-  perPage = 25,
-) {
+export async function getLayoffs(status: StatusFilter = "all", search?: string, page = 1, perPage = 25) {
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" } as const;
 
   const offset = (page - 1) * perPage;
   const conditions = [];
-
-  if (status !== "all") {
-    conditions.push(eq(layoffs.status, status));
-  }
+  if (status !== "all") conditions.push(eq(layoffs.status, status));
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [items, [total]] = await Promise.all([
     db
       .select({
-        id: layoffs.id,
-        date: layoffs.date,
-        affectedCount: layoffs.affectedCount,
-        country: layoffs.country,
-        status: layoffs.status,
-        titleEn: layoffs.titleEn,
-        isShutdown: layoffs.isShutdown,
-        reason: layoffs.reason,
-        createdAt: layoffs.createdAt,
-        companyName: companies.name,
-        companySlug: companies.slug,
+        id: layoffs.id, date: layoffs.date, affectedCount: layoffs.affectedCount,
+        country: layoffs.country, status: layoffs.status, titleEn: layoffs.titleEn,
+        isShutdown: layoffs.isShutdown, reason: layoffs.reason, createdAt: layoffs.createdAt,
+        companyName: companies.name, companySlug: companies.slug,
       })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
-      .where(
-        search
-          ? and(where, ilike(companies.name, `%${search}%`))
-          : where,
-      )
+      .where(search ? and(where, ilike(companies.name, `%${search}%`)) : where)
       .orderBy(desc(layoffs.date))
       .limit(perPage)
       .offset(offset),
@@ -78,11 +58,7 @@ export async function getLayoffs(
       .select({ count: count() })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
-      .where(
-        search
-          ? and(where, ilike(companies.name, `%${search}%`))
-          : where,
-      ),
+      .where(search ? and(where, ilike(companies.name, `%${search}%`)) : where),
   ]);
 
   return { success: true, data: { items, total: total.count, page, perPage } };
@@ -93,10 +69,7 @@ export async function getLayoffById(id: string) {
   if (!session) return { success: false, error: "Unauthorized" } as const;
 
   const [layoff] = await db
-    .select({
-      layoff: layoffs,
-      companyName: companies.name,
-    })
+    .select({ layoff: layoffs, companyName: companies.name })
     .from(layoffs)
     .innerJoin(companies, eq(layoffs.companyId, companies.id))
     .where(eq(layoffs.id, id))
@@ -186,24 +159,10 @@ export async function verifyLayoff(id: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.email) return { success: false, error: "Unauthorized" };
 
-  const [admin] = await db
-    .select({ id: admins.id })
-    .from(admins)
-    .where(eq(admins.email, session.user.email))
-    .limit(1);
-
+  const [admin] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, session.user.email)).limit(1);
   if (!admin) return { success: false, error: "Admin not found" };
 
-  await db
-    .update(layoffs)
-    .set({
-      status: "verified",
-      verifiedAt: new Date(),
-      verifiedBy: admin.id,
-      updatedAt: new Date(),
-    })
-    .where(eq(layoffs.id, id));
-
+  await db.update(layoffs).set({ status: "verified", verifiedAt: new Date(), verifiedBy: admin.id, updatedAt: new Date() }).where(eq(layoffs.id, id));
   return { success: true };
 }
 
@@ -211,24 +170,10 @@ export async function rejectLayoff(id: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.email) return { success: false, error: "Unauthorized" };
 
-  const [admin] = await db
-    .select({ id: admins.id })
-    .from(admins)
-    .where(eq(admins.email, session.user.email))
-    .limit(1);
-
+  const [admin] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, session.user.email)).limit(1);
   if (!admin) return { success: false, error: "Admin not found" };
 
-  await db
-    .update(layoffs)
-    .set({
-      status: "rejected",
-      verifiedAt: new Date(),
-      verifiedBy: admin.id,
-      updatedAt: new Date(),
-    })
-    .where(eq(layoffs.id, id));
-
+  await db.update(layoffs).set({ status: "rejected", verifiedAt: new Date(), verifiedBy: admin.id, updatedAt: new Date() }).where(eq(layoffs.id, id));
   return { success: true };
 }
 
@@ -236,21 +181,12 @@ export async function getDashboardStats() {
   const session = await auth();
   if (!session) return null;
 
-  const [
-    [totalLayoffs],
-    [verifiedLayoffs],
-    [unverifiedLayoffs],
-    [totalCompanies],
-    [totalAffected],
-  ] = await Promise.all([
+  const [[totalLayoffs], [verifiedLayoffs], [unverifiedLayoffs], [totalCompanies], [totalAffected]] = await Promise.all([
     db.select({ count: count() }).from(layoffs),
     db.select({ count: count() }).from(layoffs).where(eq(layoffs.status, "verified")),
     db.select({ count: count() }).from(layoffs).where(eq(layoffs.status, "unverified")),
     db.select({ count: count() }).from(companies),
-    db
-      .select({ total: sql<number>`coalesce(sum(${layoffs.affectedCount}), 0)` })
-      .from(layoffs)
-      .where(eq(layoffs.status, "verified")),
+    db.select({ total: sql<number>`coalesce(sum(${layoffs.affectedCount}), 0)` }).from(layoffs).where(eq(layoffs.status, "verified")),
   ]);
 
   return {

@@ -48,9 +48,7 @@ export default function CompanyForm({ industries, company, action }: Props) {
   return (
     <form action={handleSubmit} className="max-w-2xl space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-800 bg-red-950/50 px-4 py-3 text-sm text-red-300">
-          {error}
-        </div>
+        <div className="rounded-lg border border-red-800 bg-red-950/50 px-4 py-3 text-sm text-red-300">{error}</div>
       )}
 
       <Field label="Company Name *">
@@ -71,7 +69,6 @@ export default function CompanyForm({ industries, company, action }: Props) {
             ))}
           </select>
         </Field>
-
         <Field label="Company Type *">
           <select name="companyType" defaultValue={company?.companyType} required className={inputCls}>
             <option value="">Select…</option>
@@ -93,7 +90,6 @@ export default function CompanyForm({ industries, company, action }: Props) {
             ))}
           </select>
         </Field>
-
         <Field label="HQ City">
           <input name="cityHq" defaultValue={company?.cityHq ?? ""} className={inputCls} />
         </Field>
@@ -114,24 +110,15 @@ export default function CompanyForm({ industries, company, action }: Props) {
       <Field label="Description (EN)">
         <textarea name="descriptionEn" rows={3} defaultValue={company?.descriptionEn ?? ""} className={inputCls} />
       </Field>
-
       <Field label="Description (DE)">
         <textarea name="descriptionDe" rows={3} defaultValue={company?.descriptionDe ?? ""} className={inputCls} />
       </Field>
 
       <div className="flex gap-3 pt-4">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200 disabled:opacity-50"
-        >
+        <button type="submit" disabled={isPending} className="rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200 disabled:opacity-50">
           {isPending ? "Saving…" : company ? "Update Company" : "Create Company"}
         </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-lg border border-neutral-700 px-6 py-2.5 text-sm transition hover:bg-neutral-800"
-        >
+        <button type="button" onClick={() => router.back()} className="rounded-lg border border-neutral-700 px-6 py-2.5 text-sm transition hover:bg-neutral-800">
           Cancel
         </button>
       </div>
@@ -148,5 +135,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls =
-  "w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none";
+const inputCls = "w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none";
