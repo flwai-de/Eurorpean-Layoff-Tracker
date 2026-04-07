@@ -39,7 +39,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </nav>
             <div className="border-t border-neutral-800 px-4 py-4">
               <p className="mb-3 truncate text-xs text-neutral-400">{session.user?.email ?? "Admin"}</p>
-              <Link href="/api/auth/signout" prefetch={false}
+              <Link href="/api/admin/signout" prefetch={false}
                 className="block w-full rounded-lg border border-neutral-700 px-3 py-2 text-center text-xs text-neutral-300 transition hover:bg-neutral-800 hover:text-white">
                 Sign Out
               </Link>
