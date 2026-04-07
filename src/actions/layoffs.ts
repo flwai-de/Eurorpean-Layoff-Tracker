@@ -30,6 +30,13 @@ const layoffSchema = z.object({
 type ActionResult<T = undefined> = { success: boolean; error?: string; data?: T };
 type StatusFilter = "all" | "unverified" | "verified" | "rejected";
 
+async function getAdminId(): Promise<string | null> {
+  const session = await auth();
+  if (!session?.user) return null;
+  // session.user.id is set in the session callback in auth.ts
+  return (session.user as { id?: string }).id ?? null;
+}
+
 export async function getLayoffs(status: StatusFilter = "all", search?: string, page = 1, perPage = 25) {
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" } as const;
@@ -156,24 +163,30 @@ export async function updateLayoff(id: string, formData: FormData): Promise<Acti
 }
 
 export async function verifyLayoff(id: string): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+  const adminId = await getAdminId();
+  if (!adminId) return { success: false, error: "Unauthorized" };
 
-  const [admin] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, session.user.email)).limit(1);
-  if (!admin) return { success: false, error: "Admin not found" };
+  await db.update(layoffs).set({
+    status: "verified",
+    verifiedAt: new Date(),
+    verifiedBy: adminId,
+    updatedAt: new Date(),
+  }).where(eq(layoffs.id, id));
 
-  await db.update(layoffs).set({ status: "verified", verifiedAt: new Date(), verifiedBy: admin.id, updatedAt: new Date() }).where(eq(layoffs.id, id));
   return { success: true };
 }
 
 export async function rejectLayoff(id: string): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.email) return { success: false, error: "Unauthorized" };
+  const adminId = await getAdminId();
+  if (!adminId) return { success: false, error: "Unauthorized" };
 
-  const [admin] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, session.user.email)).limit(1);
-  if (!admin) return { success: false, error: "Admin not found" };
+  await db.update(layoffs).set({
+    status: "rejected",
+    verifiedAt: new Date(),
+    verifiedBy: adminId,
+    updatedAt: new Date(),
+  }).where(eq(layoffs.id, id));
 
-  await db.update(layoffs).set({ status: "rejected", verifiedAt: new Date(), verifiedBy: admin.id, updatedAt: new Date() }).where(eq(layoffs.id, id));
   return { success: true };
 }
 
