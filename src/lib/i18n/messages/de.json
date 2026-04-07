@@ -1,7 +1,16 @@
 {
   "common": {
     "title": "Dimissio — European Layoff Tracker",
-    "description": "Massenentlassungen in Europa, branchenübergreifend verfolgt und analysiert."
+    "description": "Massenentlassungen in Europa, branchenübergreifend verfolgt und analysiert.",
+    "home": "Startseite",
+    "newsletter": "Newsletter",
+    "submitTip": "Tipp einreichen",
+    "footerText": "Dimissio trackt Massenentlassungen in ganz Europa.",
+    "privacy": "Datenschutz",
+    "imprint": "Impressum",
+    "apiDocs": "API Docs",
+    "localeDe": "Deutsch",
+    "localeEn": "English"
   },
   "comingSoon": {
     "heading": "Dimissio kommt bald",
@@ -12,5 +21,69 @@
     "copyright": "© 2025 Dimissio",
     "imprint": "Impressum",
     "privacy": "Datenschutz"
+  },
+  "home": {
+    "heroHeadline": "Europäische Massenentlassungen im Überblick",
+    "totalLayoffs": "Layoffs gesamt",
+    "totalAffected": "Betroffene",
+    "thisMonth": "Diesen Monat",
+    "thisWeek": "Diese Woche",
+    "recentTitle": "Neueste Layoffs",
+    "trendingTitle": "Meistgelesen",
+    "chartTitle": "Trend der letzten 12 Monate"
+  },
+  "layoff": {
+    "affected": "Betroffene",
+    "date": "Datum",
+    "country": "Land",
+    "city": "Stadt",
+    "industry": "Branche",
+    "reason": "Grund",
+    "severance": "Abfindung",
+    "source": "Quelle",
+    "summary": "Zusammenfassung",
+    "backToOverview": "Zurück zur Übersicht"
+  },
+  "company": {
+    "industry": "Branche",
+    "headquarters": "Hauptsitz",
+    "founded": "Gegründet",
+    "employees": "Mitarbeiter",
+    "website": "Website",
+    "type": "Typ",
+    "layoffHistory": "Layoff-Historie"
+  },
+  "industry": {
+    "heading": "Layoffs in der Branche {industry}",
+    "layoffCount": "{count} Layoffs"
+  },
+  "country": {
+    "heading": "Layoffs in {country}",
+    "layoffCount": "{count} Layoffs"
+  },
+  "filters": {
+    "country": "Land",
+    "industry": "Branche",
+    "period": "Zeitraum",
+    "all": "Alle",
+    "lastWeek": "Letzte Woche",
+    "lastMonth": "Letzter Monat",
+    "last3Months": "Letzte 3 Monate",
+    "lastYear": "Letztes Jahr"
+  },
+  "newsletter": {
+    "subscribe": "Newsletter abonnieren",
+    "emailPlaceholder": "Ihre E-Mail-Adresse",
+    "submitButton": "Abonnieren",
+    "gdprNotice": "Mit der Anmeldung stimmen Sie zu, dass wir Ihnen regelmäßig Updates per E-Mail senden. Sie können sich jederzeit abmelden. Weitere Informationen finden Sie in unserer Datenschutzerklärung."
+  },
+  "reasons": {
+    "restructuring": "Restrukturierung",
+    "cost_cutting": "Kostensenkung",
+    "ai_replacement": "KI-Ersetzung",
+    "market_downturn": "Marktabschwung",
+    "merger": "Fusion/Übernahme",
+    "shutdown": "Schließung",
+    "other": "Sonstiges"
   }
 }

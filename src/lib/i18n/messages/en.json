@@ -1,7 +1,16 @@
 {
   "common": {
     "title": "Dimissio — European Layoff Tracker",
-    "description": "Tracking mass layoffs across Europe, across all industries."
+    "description": "Tracking mass layoffs across Europe, across all industries.",
+    "home": "Home",
+    "newsletter": "Newsletter",
+    "submitTip": "Submit a Tip",
+    "footerText": "Dimissio tracks mass layoffs across Europe.",
+    "privacy": "Privacy Policy",
+    "imprint": "Imprint",
+    "apiDocs": "API Docs",
+    "localeDe": "Deutsch",
+    "localeEn": "English"
   },
   "comingSoon": {
     "heading": "Dimissio is coming soon",
@@ -12,5 +21,69 @@
     "copyright": "© 2025 Dimissio",
     "imprint": "Imprint",
     "privacy": "Privacy Policy"
+  },
+  "home": {
+    "heroHeadline": "European Mass Layoffs at a Glance",
+    "totalLayoffs": "Total Layoffs",
+    "totalAffected": "People Affected",
+    "thisMonth": "This Month",
+    "thisWeek": "This Week",
+    "recentTitle": "Recent Layoffs",
+    "trendingTitle": "Most Viewed",
+    "chartTitle": "Trend over the Last 12 Months"
+  },
+  "layoff": {
+    "affected": "Affected",
+    "date": "Date",
+    "country": "Country",
+    "city": "City",
+    "industry": "Industry",
+    "reason": "Reason",
+    "severance": "Severance",
+    "source": "Source",
+    "summary": "Summary",
+    "backToOverview": "Back to Overview"
+  },
+  "company": {
+    "industry": "Industry",
+    "headquarters": "Headquarters",
+    "founded": "Founded",
+    "employees": "Employees",
+    "website": "Website",
+    "type": "Type",
+    "layoffHistory": "Layoff History"
+  },
+  "industry": {
+    "heading": "Layoffs in {industry}",
+    "layoffCount": "{count} Layoffs"
+  },
+  "country": {
+    "heading": "Layoffs in {country}",
+    "layoffCount": "{count} Layoffs"
+  },
+  "filters": {
+    "country": "Country",
+    "industry": "Industry",
+    "period": "Period",
+    "all": "All",
+    "lastWeek": "Last Week",
+    "lastMonth": "Last Month",
+    "last3Months": "Last 3 Months",
+    "lastYear": "Last Year"
+  },
+  "newsletter": {
+    "subscribe": "Subscribe to Newsletter",
+    "emailPlaceholder": "Your email address",
+    "submitButton": "Subscribe",
+    "gdprNotice": "By subscribing, you agree to receive regular email updates. You can unsubscribe at any time. For more information, see our Privacy Policy."
+  },
+  "reasons": {
+    "restructuring": "Restructuring",
+    "cost_cutting": "Cost Cutting",
+    "ai_replacement": "AI Replacement",
+    "market_downturn": "Market Downturn",
+    "merger": "Merger/Acquisition",
+    "shutdown": "Shutdown",
+    "other": "Other"
   }
 }
