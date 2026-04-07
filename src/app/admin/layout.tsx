@@ -57,7 +57,7 @@ export default async function AdminLayout({
               <form
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: "/admin/login" });
+                  await signOut({ redirect: true, redirectTo: "/admin/login" });
                 }}
               >
                 <button

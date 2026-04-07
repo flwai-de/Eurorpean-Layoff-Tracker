@@ -32,17 +32,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async jwt({ token, profile }) {
-      // On sign-in, persist admin id and role into the JWT
+      // Only runs on initial sign-in when profile is present
       if (profile?.email) {
-        const [admin] = await db
-          .select()
-          .from(admins)
-          .where(eq(admins.email, profile.email))
-          .limit(1);
-        if (admin) {
-          token.adminId = admin.id;
-          token.adminRole = admin.role;
-          token.email = profile.email;
+        try {
+          const [admin] = await db
+            .select()
+            .from(admins)
+            .where(eq(admins.email, profile.email))
+            .limit(1);
+          if (admin) {
+            token.adminId = admin.id;
+            token.adminRole = admin.role;
+          }
+        } catch {
+          // DB error during token creation — don't block auth
         }
       }
       return token;
@@ -51,9 +54,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.adminId) {
         session.user.id = token.adminId as string;
         (session.user as typeof session.user & { role: string }).role = token.adminRole as string;
-      }
-      if (token.email) {
-        session.user.email = token.email as string;
       }
       return session;
     },
