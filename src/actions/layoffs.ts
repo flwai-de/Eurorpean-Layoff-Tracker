@@ -5,6 +5,7 @@ import { layoffs, companies } from "@/lib/db/schema";
 import { eq, desc, count, and, sql, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { socialPostQueue } from "@/lib/queue";
 
 const layoffSchema = z.object({
   companyId: z.string().uuid(),
@@ -174,8 +175,25 @@ export async function verifyLayoff(id: string): Promise<ActionResult> {
     status: "verified",
     verifiedAt: new Date(),
     verifiedBy: adminId,
+    publishedToSocial: true,
     updatedAt: new Date(),
   }).where(eq(layoffs.id, id));
+
+  // Enqueue social media posts with staggered delays
+  await socialPostQueue.add("post-x", { layoffId: id, platform: "x" }, {
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  });
+  await socialPostQueue.add("post-linkedin", { layoffId: id, platform: "linkedin" }, {
+    delay: 30 * 60 * 1000,
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  });
+  await socialPostQueue.add("post-reddit", { layoffId: id, platform: "reddit" }, {
+    delay: 60 * 60 * 1000,
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  });
 
   return { success: true };
 }
