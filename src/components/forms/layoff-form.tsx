@@ -8,6 +8,8 @@ import type { Layoff } from "@/lib/db/schema";
 
 type Props = {
   layoff?: Layoff & { companyName?: string };
+  defaultCompanyName?: string;
+  defaultSourceUrl?: string;
   action: (formData: FormData) => Promise<{ success: boolean; error?: string; data?: { id: string } }>;
 };
 
@@ -40,14 +42,14 @@ const REASONS = [
   { value: "other", label: "Other" },
 ];
 
-export default function LayoffForm({ layoff, action }: Props) {
+export default function LayoffForm({ layoff, defaultCompanyName, defaultSourceUrl, action }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   // Company autocomplete state
   const [companyId, setCompanyId] = useState(layoff?.companyId ?? "");
-  const [companyQuery, setCompanyQuery] = useState(layoff?.companyName ?? "");
+  const [companyQuery, setCompanyQuery] = useState(layoff?.companyName ?? defaultCompanyName ?? "");
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -270,7 +272,7 @@ export default function LayoffForm({ layoff, action }: Props) {
       {/* Source */}
       <div className="grid grid-cols-2 gap-4">
         <Field label="Source URL *">
-          <input name="sourceUrl" type="url" defaultValue={layoff?.sourceUrl} required className={inputCls} />
+          <input name="sourceUrl" type="url" defaultValue={layoff?.sourceUrl ?? defaultSourceUrl ?? ""} required className={inputCls} />
         </Field>
         <Field label="Source Name">
           <input name="sourceName" defaultValue={layoff?.sourceName ?? ""} placeholder="e.g. Reuters, Handelsblatt" className={inputCls} />

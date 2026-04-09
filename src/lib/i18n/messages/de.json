@@ -110,6 +110,26 @@
     "submitButton": "Abonnieren",
     "gdprNotice": "Mit der Anmeldung stimmen Sie zu, dass wir Ihnen regelmäßig Updates per E-Mail senden. Sie können sich jederzeit abmelden. Weitere Informationen finden Sie in unserer Datenschutzerklärung."
   },
+  "submit": {
+    "title": "Layoff-Tipp einreichen",
+    "description": "Kennen Sie eine Entlassung, die noch nicht gelistet ist? Lassen Sie es uns wissen.",
+    "companyName": "Firmenname",
+    "companyNamePlaceholder": "z.B. Acme Corp",
+    "details": "Details",
+    "detailsPlaceholder": "Was ist passiert? Wie viele Personen sind betroffen? Gibt es Quellen?",
+    "sourceUrl": "Quell-URL (optional)",
+    "sourceUrlPlaceholder": "https://...",
+    "email": "Ihre E-Mail (optional)",
+    "emailPlaceholder": "Nur für Rückfragen",
+    "gdprConsent": "Ich stimme der Verarbeitung meiner Daten zur Prüfung dieses Tipps zu.",
+    "send": "Tipp einreichen",
+    "sending": "Wird gesendet...",
+    "thanksTitle": "Vielen Dank!",
+    "thanksDescription": "Ihr Tipp wurde eingereicht. Wir prüfen ihn so schnell wie möglich.",
+    "backHome": "Zurück zur Startseite",
+    "rateLimited": "Zu viele Einreichungen. Bitte versuchen Sie es später erneut.",
+    "metaTitle": "Tipp einreichen | Dimissio"
+  },
   "notFound": {
     "title": "Seite nicht gefunden",
     "description": "Die angeforderte Seite existiert nicht oder wurde entfernt.",

@@ -4,7 +4,6 @@ import { anthropic } from "@/lib/api/anthropic";
 import { db } from "@/lib/db";
 import {
   rssArticles,
-  rssFeeds,
   layoffs,
   companies,
 } from "@/lib/db/schema";

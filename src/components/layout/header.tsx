@@ -23,7 +23,7 @@ export default function Header() {
           <Link href="/#newsletter" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("newsletter")}
           </Link>
-          <Link href="/#submit" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+          <Link href="/submit" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("submitTip")}
           </Link>
         </nav>

@@ -78,7 +78,7 @@ async function seed() {
     try {
       await db.insert(rssFeeds).values(feed).onConflictDoNothing();
       console.log(`  + ${feed.name}`);
-    } catch (error) {
+    } catch {
       console.log(`  ~ ${feed.name} (already exists)`);
     }
   }

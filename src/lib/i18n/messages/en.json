@@ -110,6 +110,26 @@
     "submitButton": "Subscribe",
     "gdprNotice": "By subscribing, you agree to receive regular email updates. You can unsubscribe at any time. For more information, see our Privacy Policy."
   },
+  "submit": {
+    "title": "Submit a Layoff Tip",
+    "description": "Know about a layoff that's not listed yet? Let us know.",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "e.g. Acme Corp",
+    "details": "Details",
+    "detailsPlaceholder": "What happened? How many people are affected? Any sources?",
+    "sourceUrl": "Source URL (optional)",
+    "sourceUrlPlaceholder": "https://...",
+    "email": "Your Email (optional)",
+    "emailPlaceholder": "For follow-up questions only",
+    "gdprConsent": "I consent to the processing of my data for reviewing this tip.",
+    "send": "Submit Tip",
+    "sending": "Submitting...",
+    "thanksTitle": "Thank you!",
+    "thanksDescription": "Your tip has been submitted. We'll review it as soon as possible.",
+    "backHome": "Back to Home",
+    "rateLimited": "Too many submissions. Please try again later.",
+    "metaTitle": "Submit a Tip | Dimissio"
+  },
   "notFound": {
     "title": "Page Not Found",
     "description": "The page you are looking for does not exist or has been removed.",
