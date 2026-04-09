@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${t("indexTitle")} | Dimissio`,
     description: t("indexDescription"),
     alternates: {
-      languages: { de: "/de/industries", en: "/en/industries" },
+      languages: { de: "/de/industries", en: "/en/industries", "x-default": "/en/industries" },
     },
   };
 }

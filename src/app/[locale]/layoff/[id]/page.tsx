@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/${locale}/layoff/${id}`,
     },
     alternates: {
-      languages: { de: `/de/layoff/${id}`, en: `/en/layoff/${id}` },
+      languages: { de: `/de/layoff/${id}`, en: `/en/layoff/${id}`, "x-default": `/en/layoff/${id}` },
     },
   };
 }

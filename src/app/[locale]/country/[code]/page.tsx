@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     alternates: {
-      languages: { de: `/de/country/${upper}`, en: `/en/country/${upper}` },
+      languages: { de: `/de/country/${upper}`, en: `/en/country/${upper}`, "x-default": `/en/country/${upper}` },
     },
   };
 }

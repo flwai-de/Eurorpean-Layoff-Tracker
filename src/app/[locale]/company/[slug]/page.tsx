@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description: description ?? undefined,
     alternates: {
-      languages: { de: `/de/company/${slug}`, en: `/en/company/${slug}` },
+      languages: { de: `/de/company/${slug}`, en: `/en/company/${slug}`, "x-default": `/en/company/${slug}` },
     },
   };
 }

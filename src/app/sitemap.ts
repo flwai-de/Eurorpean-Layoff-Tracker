@@ -5,16 +5,37 @@ import { eq, sql } from "drizzle-orm";
 
 const BASE_URL = "https://dimissio.eu";
 
+function localeAlternates(path: string) {
+  return {
+    languages: {
+      de: `${BASE_URL}/de${path}`,
+      en: `${BASE_URL}/en${path}`,
+    },
+  };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
-  // Static pages
+  // Static pages — Homepage
   for (const locale of ["de", "en"]) {
     entries.push({
       url: `${BASE_URL}/${locale}`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
+      alternates: localeAlternates(""),
+    });
+  }
+
+  // Static pages — Industries index
+  for (const locale of ["de", "en"]) {
+    entries.push({
+      url: `${BASE_URL}/${locale}/industries`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: localeAlternates("/industries"),
     });
   }
 
@@ -28,12 +49,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .where(eq(layoffs.status, "verified"));
 
   for (const layoff of verifiedLayoffs) {
+    const path = `/layoff/${layoff.id}`;
     for (const locale of ["de", "en"]) {
       entries.push({
-        url: `${BASE_URL}/${locale}/layoff/${layoff.id}`,
+        url: `${BASE_URL}/${locale}${path}`,
         lastModified: layoff.updatedAt,
         changeFrequency: "weekly",
-        priority: 0.8,
+        priority: 0.6,
+        alternates: localeAlternates(path),
       });
     }
   }
@@ -49,26 +72,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .where(eq(layoffs.status, "verified"));
 
   for (const company of companiesWithLayoffs) {
+    const path = `/company/${company.slug}`;
     for (const locale of ["de", "en"]) {
       entries.push({
-        url: `${BASE_URL}/${locale}/company/${company.slug}`,
+        url: `${BASE_URL}/${locale}${path}`,
         lastModified: company.updatedAt,
         changeFrequency: "weekly",
-        priority: 0.7,
+        priority: 0.6,
+        alternates: localeAlternates(path),
       });
     }
   }
 
-  // All industries
-  const allIndustries = await db.select({ slug: industries.slug }).from(industries);
+  // Industries with at least one verified layoff
+  const industriesWithLayoffs = await db
+    .selectDistinct({
+      slug: companies.industrySlug,
+    })
+    .from(companies)
+    .innerJoin(layoffs, eq(companies.id, layoffs.companyId))
+    .where(eq(layoffs.status, "verified"));
 
-  for (const industry of allIndustries) {
+  const industrySlugs = new Set(industriesWithLayoffs.map((i) => i.slug));
+
+  // Also include parent industries if any child has layoffs
+  const allIndustries = await db.select().from(industries);
+  for (const ind of allIndustries) {
+    if (ind.parentSlug && industrySlugs.has(ind.slug)) {
+      industrySlugs.add(ind.parentSlug);
+    }
+  }
+
+  for (const slug of industrySlugs) {
+    const path = `/industry/${slug}`;
     for (const locale of ["de", "en"]) {
       entries.push({
-        url: `${BASE_URL}/${locale}/industry/${industry.slug}`,
+        url: `${BASE_URL}/${locale}${path}`,
         lastModified: new Date(),
         changeFrequency: "weekly",
-        priority: 0.6,
+        priority: 0.8,
+        alternates: localeAlternates(path),
       });
     }
   }
@@ -84,12 +127,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .groupBy(layoffs.country);
 
   for (const row of countriesWithLayoffs) {
+    const path = `/country/${row.country}`;
     for (const locale of ["de", "en"]) {
       entries.push({
-        url: `${BASE_URL}/${locale}/country/${row.country}`,
+        url: `${BASE_URL}/${locale}${path}`,
         lastModified: row.lastUpdated,
         changeFrequency: "weekly",
-        priority: 0.6,
+        priority: 0.8,
+        alternates: localeAlternates(path),
       });
     }
   }
