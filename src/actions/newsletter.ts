@@ -10,7 +10,16 @@ import { rateLimit } from "@/lib/utils/rate-limit";
 import { Resend } from "resend";
 import { newsletterSendQueue } from "@/lib/queue";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is not set");
+    }
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 type ActionResult = { success: boolean; error?: string };
 
@@ -43,7 +52,7 @@ async function sendConfirmationEmail(
     ? `Hallo,\n\nbitte bestätige deine Newsletter-Anmeldung bei Dimissio:\n\n${confirmUrl}\n\nFalls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren.\n\nViele Grüße,\nDimissio`
     : `Hi,\n\nplease confirm your newsletter subscription at Dimissio:\n\n${confirmUrl}\n\nIf you didn't sign up, you can safely ignore this email.\n\nBest,\nDimissio`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "Dimissio <newsletter@dimissio.eu>",
     to: email,
     subject,

@@ -1,6 +1,6 @@
 import { Worker, type Job } from "bullmq";
 import { connection } from "@/lib/queue";
-import { anthropic } from "@/lib/api/anthropic";
+import { getAnthropic } from "@/lib/api/anthropic";
 import { db } from "@/lib/db";
 import {
   rssArticles,
@@ -199,7 +199,7 @@ async function handleExtract(job: Job<ExtractPayload>) {
 
   let aiResponse: AiResponse;
   try {
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       system: SYSTEM_PROMPT,

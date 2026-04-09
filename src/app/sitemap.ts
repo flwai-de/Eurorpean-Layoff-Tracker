@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { layoffs, companies, industries } from "@/lib/db/schema";
