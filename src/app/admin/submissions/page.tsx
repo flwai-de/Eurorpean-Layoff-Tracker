@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSubmissions } from "@/actions/submissions";
 import SubmissionList from "./submission-list";
 
@@ -23,7 +24,7 @@ export default async function SubmissionsPage({ searchParams }: Props) {
       {/* Status filter tabs */}
       <div className="mb-6 flex gap-2">
         {(["pending", "processed", "rejected"] as const).map((s) => (
-          <a
+          <Link
             key={s}
             href={`/admin/submissions?status=${s}`}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
@@ -33,7 +34,7 @@ export default async function SubmissionsPage({ searchParams }: Props) {
             }`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
-          </a>
+          </Link>
         ))}
       </div>
 

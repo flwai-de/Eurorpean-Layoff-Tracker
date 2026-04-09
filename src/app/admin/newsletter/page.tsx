@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { layoffs, companies } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
@@ -35,12 +36,12 @@ export default async function NewsletterPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Newsletter Composer</h1>
-        <a
+        <Link
           href="/admin/newsletter/archive"
           className="text-sm text-neutral-400 transition hover:text-white"
         >
           View Archive &rarr;
-        </a>
+        </Link>
       </div>
       <NewsletterComposer layoffs={availableLayoffs} />
     </div>

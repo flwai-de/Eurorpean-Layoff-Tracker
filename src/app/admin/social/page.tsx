@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { socialPosts, layoffs, companies } from "@/lib/db/schema";
 import { eq, and, desc, type SQL } from "drizzle-orm";
@@ -44,30 +45,30 @@ export default async function SocialPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-2">
-        <a
+        <Link
           href="/admin/social"
           className={`rounded-lg px-3 py-1.5 text-sm ${!platform && !status ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-neutral-800"}`}
         >
           All
-        </a>
+        </Link>
         {(["x", "linkedin", "reddit"] as const).map((p) => (
-          <a
+          <Link
             key={p}
             href={`/admin/social?platform=${p}`}
             className={`rounded-lg px-3 py-1.5 text-sm ${platform === p ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-neutral-800"}`}
           >
             {p === "x" ? "X" : p.charAt(0).toUpperCase() + p.slice(1)}
-          </a>
+          </Link>
         ))}
         <span className="mx-2 self-center text-neutral-700">|</span>
         {(["queued", "posted", "failed"] as const).map((s) => (
-          <a
+          <Link
             key={s}
             href={`/admin/social?status=${s}`}
             className={`rounded-lg px-3 py-1.5 text-sm ${status === s ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-neutral-800"}`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
-          </a>
+          </Link>
         ))}
       </div>
 

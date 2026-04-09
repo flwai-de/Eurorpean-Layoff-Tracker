@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getNewsletterIssues } from "@/actions/newsletter";
 
 export default async function NewsletterArchivePage() {
@@ -11,12 +12,12 @@ export default async function NewsletterArchivePage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Newsletter Archive</h1>
-        <a
+        <Link
           href="/admin/newsletter"
           className="text-sm text-neutral-400 transition hover:text-white"
         >
           &larr; Back to Composer
-        </a>
+        </Link>
       </div>
 
       {result.data.length === 0 ? (

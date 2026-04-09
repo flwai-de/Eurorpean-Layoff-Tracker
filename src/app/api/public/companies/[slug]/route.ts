@@ -1,26 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCompanyBySlug } from "@/lib/queries/public";
-import { withCors } from "@/lib/utils/cors";
+import { apiGuard, corsPreflightResponse, withRateLimitHeaders } from "@/lib/utils/cors";
 
 const paramsSchema = z.object({
   slug: z.string().min(1).max(200),
 });
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
+  const blocked = apiGuard(request);
+  if (blocked) return blocked;
+
   const { slug } = await params;
   const parsed = paramsSchema.safeParse({ slug });
   if (!parsed.success) {
-    return withCors(NextResponse.json({ error: "Invalid slug" }, { status: 400 }));
+    return withRateLimitHeaders(NextResponse.json({ error: "Invalid slug" }, { status: 400 }), request);
   }
 
   const company = await getCompanyBySlug(parsed.data.slug);
   if (!company) {
-    return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }));
+    return withRateLimitHeaders(NextResponse.json({ error: "Not found" }, { status: 404 }), request);
   }
 
-  return withCors(NextResponse.json({ data: company }));
+  return withRateLimitHeaders(NextResponse.json({ data: company }), request);
+}
+
+export function OPTIONS() {
+  return corsPreflightResponse();
 }

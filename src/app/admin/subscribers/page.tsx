@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSubscribers } from "@/actions/newsletter";
 
 interface Props {
@@ -33,20 +34,20 @@ export default async function SubscribersPage({ searchParams }: Props) {
 
       {/* Filter tabs */}
       <div className="mb-6 flex gap-2">
-        <a
+        <Link
           href="/admin/subscribers"
           className={`rounded-lg px-3 py-1.5 text-sm ${!status ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-neutral-800"}`}
         >
           All
-        </a>
+        </Link>
         {(["active", "pending", "unsubscribed", "bounced"] as const).map((s) => (
-          <a
+          <Link
             key={s}
             href={`/admin/subscribers?status=${s}`}
             className={`rounded-lg px-3 py-1.5 text-sm ${status === s ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-neutral-800"}`}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
-          </a>
+          </Link>
         ))}
       </div>
 

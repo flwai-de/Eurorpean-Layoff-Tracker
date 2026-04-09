@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { Link } from "@/lib/i18n/routing";
 import NewsletterForm from "./newsletter-form";
 
 export default function Footer() {
@@ -32,9 +33,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+                <Link href="/api-docs" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
                   {t("common.apiDocs")}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

@@ -8,7 +8,7 @@ import {
   layoffs,
   companies,
 } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL = "https://dimissio.eu";
