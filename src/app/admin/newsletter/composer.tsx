@@ -38,7 +38,7 @@ export default function NewsletterComposer({ layoffs }: { layoffs: LayoffOption[
       return;
     }
 
-    // Append selected layoff IDs
+    // Append selected layoff IDs and sponsor data
     for (const id of selected) {
       formData.append("layoffIds", id);
     }
@@ -97,6 +97,40 @@ export default function NewsletterComposer({ layoffs }: { layoffs: LayoffOption[
           />
         </label>
       </div>
+
+      {/* Sponsor (optional) */}
+      <details className="rounded-lg border border-neutral-800 p-4">
+        <summary className="cursor-pointer text-sm font-medium text-neutral-300">
+          Sponsor Block (optional)
+        </summary>
+        <div className="mt-4 space-y-3">
+          <label className="block">
+            <span className="mb-1 block text-xs text-neutral-400">Sponsor Headline</span>
+            <input
+              name="sponsorHeadline"
+              placeholder="e.g. Presented by Acme HR"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs text-neutral-400">Sponsor Body</span>
+            <input
+              name="sponsorBody"
+              placeholder="Short sponsor message..."
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs text-neutral-400">Sponsor URL</span>
+            <input
+              name="sponsorUrl"
+              type="url"
+              placeholder="https://..."
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+            />
+          </label>
+        </div>
+      </details>
 
       {/* Layoff selection */}
       <div>

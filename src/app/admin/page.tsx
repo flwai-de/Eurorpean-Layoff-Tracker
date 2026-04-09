@@ -13,8 +13,11 @@ export default async function AdminDashboardPage() {
     { label: "Total Layoffs", value: stats?.totalLayoffs ?? 0, href: "/admin/layoffs" },
     { label: "Unverified", value: stats?.unverifiedLayoffs ?? 0, href: "/admin/layoffs?status=unverified", highlight: true },
     { label: "Verified", value: stats?.verifiedLayoffs ?? 0, href: "/admin/layoffs?status=verified" },
+    { label: "This Week", value: stats?.thisWeek ?? 0, href: "/admin/layoffs" },
     { label: "Companies", value: stats?.totalCompanies ?? 0, href: "/admin/companies" },
     { label: "People Affected", value: stats?.totalAffected?.toLocaleString("en-US") ?? 0, href: "/admin/layoffs?status=verified" },
+    { label: "Subscribers", value: stats?.activeSubscribers ?? 0, href: "/admin/subscribers" },
+    { label: "Pending Tips", value: stats?.pendingSubmissions ?? 0, href: "/admin/submissions?status=pending", highlight: (stats?.pendingSubmissions ?? 0) > 0 },
   ];
 
   return (
@@ -26,7 +29,7 @@ export default async function AdminDashboardPage() {
           <Link href="/admin/layoffs/new" className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-200">+ Layoff</Link>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {cards.map((card) => (
           <Link key={card.label} href={card.href}
             className={`rounded-2xl border p-6 transition hover:border-neutral-600 ${card.highlight ? "border-yellow-600/50 bg-yellow-950/20" : "border-neutral-800 bg-neutral-900"}`}>

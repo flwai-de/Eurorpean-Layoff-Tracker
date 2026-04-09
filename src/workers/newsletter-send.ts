@@ -14,8 +14,15 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL = "https://dimissio.eu";
 const BATCH_SIZE = 100;
 
+interface SponsorData {
+  headline: string;
+  body: string;
+  url: string;
+}
+
 interface SendPayload {
   issueId: string;
+  sponsor?: SponsorData;
 }
 
 interface LayoffData {
@@ -35,6 +42,7 @@ function generateHtml(
   layoffData: LayoffData[],
   language: "de" | "en",
   email: string,
+  sponsor?: SponsorData,
 ): string {
   const subject = language === "de" ? issue.subjectDe : issue.subjectEn;
   const unsubUrl = `${SITE_URL}/api/public/newsletter/unsubscribe?email=${Buffer.from(email).toString("base64")}`;
@@ -77,7 +85,17 @@ function generateHtml(
       <td style="padding: 24px 0;">
         <p style="margin: 0; font-size: 15px; color: #d4d4d4;">${escapeHtml(intro)}</p>
       </td>
-    </tr>
+    </tr>${sponsor ? `
+    <tr>
+      <td style="padding: 0 0 24px;">
+        <div style="background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 16px;">
+          <p style="color: #888; font-size: 11px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">SPONSORED</p>
+          <p style="color: #fff; font-size: 14px; margin: 0 0 8px;">${escapeHtml(sponsor.headline)}</p>
+          <p style="color: #ccc; font-size: 13px; margin: 0 0 12px;">${escapeHtml(sponsor.body)}</p>
+          <a href="${escapeHtml(sponsor.url)}" style="color: #2dd4bf; font-size: 13px; text-decoration: none;">Learn more \u2192</a>
+        </div>
+      </td>
+    </tr>` : ""}
     <tr>
       <td>
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -111,7 +129,7 @@ function escapeHtml(text: string): string {
 }
 
 async function handleSend(job: Job<SendPayload>) {
-  const { issueId } = job.data;
+  const { issueId, sponsor } = job.data;
 
   const issue = await db.query.newsletterIssues.findFirst({
     where: eq(newsletterIssues.id, issueId),
@@ -176,7 +194,7 @@ async function handleSend(job: Job<SendPayload>) {
           from: "Dimissio <newsletter@dimissio.eu>",
           to: sub.email,
           subject,
-          html: generateHtml(issue, layoffData, group.lang, sub.email),
+          html: generateHtml(issue, layoffData, group.lang, sub.email, sponsor),
         })),
       );
 

@@ -55,7 +55,9 @@
     "backToOverview": "Zurück zur Übersicht",
     "breadcrumbLayoffs": "Layoffs",
     "metaTitle": "{company} entlässt {count} Mitarbeiter | Dimissio",
-    "metaTitleNoCount": "{company} — Layoff | Dimissio"
+    "metaTitleNoCount": "{company} — Layoff | Dimissio",
+    "findJobs": "Auf Jobsuche?",
+    "jobsAt": "Jobs bei {company} auf {platform}"
   },
   "company": {
     "industry": "Branche",

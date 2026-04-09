@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { layoffs, companies } from "@/lib/db/schema";
-import { eq, desc, count, and, sql, ilike } from "drizzle-orm";
+import { layoffs, companies, newsletterSubscribers, submissions } from "@/lib/db/schema";
+import { eq, desc, count, and, sql, ilike, gte } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { socialPostQueue } from "@/lib/queue";
@@ -218,12 +218,28 @@ export async function getDashboardStats() {
   const session = await auth();
   if (!session) return null;
 
-  const [[totalLayoffs], [verifiedLayoffs], [unverifiedLayoffs], [totalCompanies], [totalAffected]] = await Promise.all([
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekAgoStr = weekAgo.toISOString().split("T")[0];
+
+  const [
+    [totalLayoffs],
+    [verifiedLayoffs],
+    [unverifiedLayoffs],
+    [totalCompanies],
+    [totalAffected],
+    [activeSubscribers],
+    [pendingSubmissions],
+    [thisWeek],
+  ] = await Promise.all([
     db.select({ count: count() }).from(layoffs),
     db.select({ count: count() }).from(layoffs).where(eq(layoffs.status, "verified")),
     db.select({ count: count() }).from(layoffs).where(eq(layoffs.status, "unverified")),
     db.select({ count: count() }).from(companies),
     db.select({ total: sql<number>`coalesce(sum(${layoffs.affectedCount}), 0)` }).from(layoffs).where(eq(layoffs.status, "verified")),
+    db.select({ count: count() }).from(newsletterSubscribers).where(eq(newsletterSubscribers.status, "active")),
+    db.select({ count: count() }).from(submissions).where(eq(submissions.status, "pending")),
+    db.select({ count: count() }).from(layoffs).where(and(eq(layoffs.status, "verified"), gte(layoffs.date, weekAgoStr))),
   ]);
 
   return {
@@ -232,5 +248,8 @@ export async function getDashboardStats() {
     unverifiedLayoffs: unverifiedLayoffs.count,
     totalCompanies: totalCompanies.count,
     totalAffected: Number(totalAffected.total),
+    activeSubscribers: activeSubscribers.count,
+    pendingSubmissions: pendingSubmissions.count,
+    thisWeek: thisWeek.count,
   };
 }

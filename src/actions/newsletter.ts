@@ -192,8 +192,16 @@ export async function sendNewsletter(formData: FormData): Promise<ActionResult &
     .set({ publishedToNewsletter: true, updatedAt: new Date() })
     .where(inArray(layoffs.id, ids));
 
+  // Build optional sponsor payload
+  const sponsorHeadline = formData.get("sponsorHeadline") as string | null;
+  const sponsorBody = formData.get("sponsorBody") as string | null;
+  const sponsorUrl = formData.get("sponsorUrl") as string | null;
+  const sponsor = sponsorHeadline && sponsorBody && sponsorUrl
+    ? { headline: sponsorHeadline, body: sponsorBody, url: sponsorUrl }
+    : undefined;
+
   // Enqueue send job
-  await newsletterSendQueue.add("send", { issueId: issue.id }, {
+  await newsletterSendQueue.add("send", { issueId: issue.id, sponsor }, {
     removeOnComplete: 50,
     removeOnFail: 100,
   });

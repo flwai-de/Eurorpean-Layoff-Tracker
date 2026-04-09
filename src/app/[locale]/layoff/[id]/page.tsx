@@ -7,6 +7,7 @@ import { Link } from "@/lib/i18n/routing";
 import { getLayoffById } from "@/lib/queries/public";
 import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
 import { generateLayoffTitle } from "@/lib/utils/generate-title";
+import JobLinks from "@/components/layoffs/job-links";
 import ViewCounter from "./view-counter";
 
 interface Props {
@@ -178,6 +179,9 @@ function LayoffContent({ layoff }: { layoff: NonNullable<Awaited<ReturnType<type
           />
         )}
       </div>
+
+      {/* Job Links */}
+      <JobLinks companyName={layoff.company.name} />
 
       {/* Source + Back */}
       <div className="mt-8 flex flex-wrap items-center gap-4">
