@@ -1,4 +1,5 @@
 import { createRssFetchWorker } from "./rss-fetch";
+import { createAiExtractWorker } from "./ai-extract";
 import { registerCronJobs } from "@/lib/queue/cron";
 
 async function main() {
@@ -12,10 +13,16 @@ async function main() {
   const rssFetchWorker = createRssFetchWorker();
   console.log("[workers] RSS fetch worker started");
 
+  const aiExtractWorker = createAiExtractWorker();
+  console.log("[workers] AI extract worker started");
+
   // Graceful shutdown
   const shutdown = async () => {
     console.log("[workers] Shutting down...");
-    await rssFetchWorker.close();
+    await Promise.all([
+      rssFetchWorker.close(),
+      aiExtractWorker.close(),
+    ]);
     process.exit(0);
   };
 
