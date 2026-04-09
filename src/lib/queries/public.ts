@@ -16,7 +16,9 @@ import { cache } from "@/lib/utils/cache";
 // ============================================================
 
 export type LayoffWithCompany = Layoff & {
-  company: Pick<Company, "name" | "slug" | "logoUrl" | "industrySlug" | "countryHq">;
+  company: Pick<Company, "name" | "slug" | "logoUrl" | "industrySlug" | "countryHq"> & {
+    industry: Pick<Industry, "nameEn" | "nameDe">;
+  };
 };
 
 type LayoffDetail = Layoff & {
@@ -84,9 +86,12 @@ export async function getVerifiedLayoffs(opts: {
         companyLogoUrl: companies.logoUrl,
         companyIndustrySlug: companies.industrySlug,
         companyCountryHq: companies.countryHq,
+        industryNameEn: industries.nameEn,
+        industryNameDe: industries.nameDe,
       })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
+      .innerJoin(industries, eq(companies.industrySlug, industries.slug))
       .where(where)
       .orderBy(desc(layoffs.date))
       .limit(limit)
@@ -132,6 +137,10 @@ export async function getVerifiedLayoffs(opts: {
         logoUrl: row.companyLogoUrl,
         industrySlug: row.companyIndustrySlug,
         countryHq: row.companyCountryHq,
+        industry: {
+          nameEn: row.industryNameEn,
+          nameDe: row.industryNameDe,
+        },
       },
     })),
     total: totalResult[0]?.total ?? 0,
@@ -258,11 +267,22 @@ export async function getTrendChartData(months: number = 12): Promise<TrendDataP
     .groupBy(sql`to_char(${layoffs.date}::date, 'YYYY-MM')`)
     .orderBy(sql`to_char(${layoffs.date}::date, 'YYYY-MM')`);
 
-  return rows.map((row) => ({
+  const dataMap = new Map(rows.map((row) => [row.month, {
     month: row.month,
     layoffCount: row.layoffCount,
     affectedCount: Number(row.affectedCount ?? 0),
-  }));
+  }]));
+
+  // Build full array of last N months, filling gaps with 0
+  const result: TrendDataPoint[] = [];
+  const now = new Date();
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    result.push(dataMap.get(key) ?? { month: key, layoffCount: 0, affectedCount: 0 });
+  }
+
+  return result;
 }
 
 // ============================================================
@@ -333,9 +353,12 @@ export async function getLayoffsByIndustry(
         companyLogoUrl: companies.logoUrl,
         companyIndustrySlug: companies.industrySlug,
         companyCountryHq: companies.countryHq,
+        industryNameEn: industries.nameEn,
+        industryNameDe: industries.nameDe,
       })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
+      .innerJoin(industries, eq(companies.industrySlug, industries.slug))
       .where(where)
       .orderBy(desc(layoffs.date))
       .limit(limit)
@@ -381,6 +404,10 @@ export async function getLayoffsByIndustry(
         logoUrl: row.companyLogoUrl,
         industrySlug: row.companyIndustrySlug,
         countryHq: row.companyCountryHq,
+        industry: {
+          nameEn: row.industryNameEn,
+          nameDe: row.industryNameDe,
+        },
       },
     })),
     total: totalResult[0]?.total ?? 0,
@@ -438,10 +465,13 @@ export async function getTrendingLayoffs(limit: number = 5): Promise<LayoffWithC
       companyLogoUrl: companies.logoUrl,
       companyIndustrySlug: companies.industrySlug,
       companyCountryHq: companies.countryHq,
+      industryNameEn: industries.nameEn,
+      industryNameDe: industries.nameDe,
       totalViews: sum(layoffViews.viewCount),
     })
     .from(layoffs)
     .innerJoin(companies, eq(layoffs.companyId, companies.id))
+    .innerJoin(industries, eq(companies.industrySlug, industries.slug))
     .innerJoin(layoffViews, eq(layoffs.id, layoffViews.layoffId))
     .where(
       and(
@@ -456,6 +486,8 @@ export async function getTrendingLayoffs(limit: number = 5): Promise<LayoffWithC
       companies.logoUrl,
       companies.industrySlug,
       companies.countryHq,
+      industries.nameEn,
+      industries.nameDe,
     )
     .orderBy(desc(sum(layoffViews.viewCount)))
     .limit(limit);
@@ -497,6 +529,10 @@ export async function getTrendingLayoffs(limit: number = 5): Promise<LayoffWithC
       logoUrl: row.companyLogoUrl,
       industrySlug: row.companyIndustrySlug,
       countryHq: row.companyCountryHq,
+      industry: {
+        nameEn: row.industryNameEn,
+        nameDe: row.industryNameDe,
+      },
     },
   }));
 }

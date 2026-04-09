@@ -148,6 +148,10 @@ function CompanyContent({ company }: { company: NonNullable<Awaited<ReturnType<t
                     logoUrl: company.logoUrl,
                     industrySlug: company.industrySlug,
                     countryHq: company.countryHq,
+                    industry: {
+                      nameEn: company.industry.nameEn,
+                      nameDe: company.industry.nameDe,
+                    },
                   },
                 }}
               />

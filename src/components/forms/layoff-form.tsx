@@ -124,7 +124,7 @@ export default function LayoffForm({ layoff, action }: Props) {
           {companyId && (
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-400">&#10003;</span>
           )}
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && (
             <ul className="absolute z-10 mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-800 py-1 shadow-lg">
               {suggestions.map((s) => (
                 <li key={s.id}>
@@ -134,6 +134,7 @@ export default function LayoffForm({ layoff, action }: Props) {
                     onMouseDown={() => {
                       setCompanyId(s.id);
                       setCompanyQuery(s.name);
+                      setSuggestions([]);
                       setShowSuggestions(false);
                     }}
                   >
@@ -141,6 +142,19 @@ export default function LayoffForm({ layoff, action }: Props) {
                   </button>
                 </li>
               ))}
+              {suggestions.length === 0 && companyQuery.length >= 2 && (
+                <li>
+                  <button
+                    type="button"
+                    className="w-full px-3 py-2 text-left text-sm text-teal-400 hover:bg-neutral-700"
+                    onMouseDown={() => {
+                      router.push(`/admin/companies/new?name=${encodeURIComponent(companyQuery)}`);
+                    }}
+                  >
+                    + Create &quot;{companyQuery}&quot;
+                  </button>
+                </li>
+              )}
             </ul>
           )}
         </div>

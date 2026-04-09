@@ -7,6 +7,7 @@ import type { Company, Industry } from "@/lib/db/schema";
 type Props = {
   industries: Industry[];
   company?: Company;
+  defaultName?: string;
   action: (formData: FormData) => Promise<{ success: boolean; error?: string; data?: { id: string } }>;
 };
 
@@ -24,7 +25,7 @@ const EUROPEAN_COUNTRIES = [
   { code: "UA", name: "Ukraine" }, { code: "RS", name: "Serbia" }, { code: "IS", name: "Iceland" },
 ];
 
-export default function CompanyForm({ industries, company, action }: Props) {
+export default function CompanyForm({ industries, company, defaultName, action }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,11 @@ export default function CompanyForm({ industries, company, action }: Props) {
     startTransition(async () => {
       const result = await action(formData);
       if (result.success) {
-        router.push("/admin/companies");
+        if (defaultName) {
+          router.back();
+        } else {
+          router.push("/admin/companies");
+        }
         router.refresh();
       } else {
         setError(result.error ?? "Something went wrong");
@@ -52,7 +57,7 @@ export default function CompanyForm({ industries, company, action }: Props) {
       )}
 
       <Field label="Company Name *">
-        <input name="name" defaultValue={company?.name} required className={inputCls} />
+        <input name="name" defaultValue={company?.name ?? defaultName ?? ""} required className={inputCls} />
       </Field>
 
       <div className="grid grid-cols-2 gap-4">

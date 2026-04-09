@@ -92,7 +92,7 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
           )}
           {layoff.company.industrySlug && (
             <span className="rounded-full bg-neutral-100 px-2 py-0.5 dark:bg-neutral-800">
-              {layoff.company.industrySlug}
+              {locale === "de" ? layoff.company.industry.nameDe : layoff.company.industry.nameEn}
             </span>
           )}
         </div>

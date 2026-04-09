@@ -55,19 +55,6 @@ export default function TrendChart({ data }: TrendChartProps) {
   const t = useTranslations("home");
   const locale = useLocale();
 
-  if (data.length === 0) {
-    return (
-      <section className="mx-auto max-w-6xl px-6 py-8">
-        <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-          {t("chartTitle")}
-        </h2>
-        <div className="mt-4 flex h-48 items-center justify-center rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-          <p className="text-sm text-neutral-400">{t("noData")}</p>
-        </div>
-      </section>
-    );
-  }
-
   const chartData = data.map((d) => ({
     ...d,
     label: formatMonth(d.month, locale),
