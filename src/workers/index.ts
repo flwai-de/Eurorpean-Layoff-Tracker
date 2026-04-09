@@ -1,6 +1,7 @@
 import { createRssFetchWorker } from "./rss-fetch";
 import { createAiExtractWorker } from "./ai-extract";
 import { createSocialPostWorker } from "./social-post";
+import { createNewsletterSendWorker } from "./newsletter-send";
 import { registerCronJobs } from "@/lib/queue/cron";
 
 async function main() {
@@ -20,6 +21,9 @@ async function main() {
   const socialPostWorker = createSocialPostWorker();
   console.log("[workers] Social post worker started");
 
+  const newsletterSendWorker = createNewsletterSendWorker();
+  console.log("[workers] Newsletter send worker started");
+
   // Graceful shutdown
   const shutdown = async () => {
     console.log("[workers] Shutting down...");
@@ -27,6 +31,7 @@ async function main() {
       rssFetchWorker.close(),
       aiExtractWorker.close(),
       socialPostWorker.close(),
+      newsletterSendWorker.close(),
     ]);
     process.exit(0);
   };

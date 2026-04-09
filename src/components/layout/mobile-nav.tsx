@@ -37,7 +37,7 @@ export default function MobileNav() {
             <Link href="/industries" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
               {t("industries")}
             </Link>
-            <Link href="/#newsletter" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            <Link href="/newsletter" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
               {t("newsletter")}
             </Link>
             <Link href="/submit" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">

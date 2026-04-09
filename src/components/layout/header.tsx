@@ -20,7 +20,7 @@ export default function Header() {
           <Link href="/industries" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("industries")}
           </Link>
-          <Link href="/#newsletter" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+          <Link href="/newsletter" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("newsletter")}
           </Link>
           <Link href="/submit" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
