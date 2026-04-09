@@ -51,6 +51,7 @@ export default function LayoffForm({ layoff, action }: Props) {
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const justSelectedRef = useRef(false);
 
   // Title preview state
   const [affectedCount, setAffectedCount] = useState(layoff?.affectedCount ?? null);
@@ -113,6 +114,10 @@ export default function LayoffForm({ layoff, action }: Props) {
             type="text"
             value={companyQuery}
             onChange={(e) => {
+              if (justSelectedRef.current) {
+                justSelectedRef.current = false;
+                return;
+              }
               setCompanyQuery(e.target.value);
               setCompanyId("");
             }}
@@ -132,6 +137,7 @@ export default function LayoffForm({ layoff, action }: Props) {
                     type="button"
                     className="w-full px-3 py-2 text-left text-sm hover:bg-neutral-700"
                     onMouseDown={() => {
+                      justSelectedRef.current = true;
                       setCompanyId(s.id);
                       setCompanyQuery(s.name);
                       setSuggestions([]);
