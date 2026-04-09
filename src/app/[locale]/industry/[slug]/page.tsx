@@ -45,6 +45,10 @@ export default async function IndustryPage({ params, searchParams }: Props) {
   });
   if (!industry) notFound();
 
+  const parentIndustry = industry.parentSlug
+    ? await db.query.industries.findFirst({ where: eq(industries.slug, industry.parentSlug) })
+    : null;
+
   const [result, children] = await Promise.all([
     getLayoffsByIndustry(slug, PER_PAGE, (page - 1) * PER_PAGE),
     db
@@ -62,6 +66,7 @@ export default async function IndustryPage({ params, searchParams }: Props) {
   return (
     <IndustryContent
       industry={industry}
+      parentIndustry={parentIndustry ?? undefined}
       children_={children}
       layoffs={result.data}
       total={result.total}
@@ -73,6 +78,7 @@ export default async function IndustryPage({ params, searchParams }: Props) {
 
 function IndustryContent({
   industry,
+  parentIndustry,
   children_,
   layoffs,
   total,
@@ -80,6 +86,7 @@ function IndustryContent({
   page,
 }: {
   industry: typeof industries.$inferSelect;
+  parentIndustry?: typeof industries.$inferSelect;
   children_: (typeof industries.$inferSelect)[];
   layoffs: Awaited<ReturnType<typeof getLayoffsByIndustry>>["data"];
   total: number;
@@ -96,6 +103,19 @@ function IndustryContent({
       <h1 className="text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
         {t("heading", { industry: name })}
       </h1>
+
+      {/* Parent link */}
+      {parentIndustry && (
+        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+          {t("parentIndustry", { parent: "" })}
+          <Link
+            href={`/industry/${parentIndustry.slug}`}
+            className="text-teal-700 transition hover:underline dark:text-teal-400"
+          >
+            {locale === "de" ? parentIndustry.nameDe : parentIndustry.nameEn}
+          </Link>
+        </p>
+      )}
 
       {/* Stats */}
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-neutral-500 dark:text-neutral-400">

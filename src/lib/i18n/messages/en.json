@@ -5,6 +5,7 @@
     "home": "Home",
     "newsletter": "Newsletter",
     "submitTip": "Submit a Tip",
+    "industries": "Industries",
     "footerText": "Dimissio tracks layoffs across Europe.",
     "privacy": "Privacy Policy",
     "imprint": "Imprint",
@@ -80,7 +81,10 @@
     "layoffCount": "{count} Layoffs",
     "totalAffected": "{count} Affected",
     "subIndustries": "Sub-Industries",
-    "metaTitle": "Layoffs in {industry} | Dimissio"
+    "parentIndustry": "Part of {parent}",
+    "metaTitle": "Layoffs in {industry} | Dimissio",
+    "indexTitle": "Industries",
+    "indexDescription": "Browse layoffs by industry across Europe."
   },
   "country": {
     "heading": "Layoffs in {country}",

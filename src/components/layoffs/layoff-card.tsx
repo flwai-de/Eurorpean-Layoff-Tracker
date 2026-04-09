@@ -46,10 +46,14 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
     .toUpperCase();
 
   return (
-    <Link
-      href={`/layoff/${layoff.id}`}
-      className="group flex gap-4 rounded-xl border border-neutral-200 bg-white p-4 transition hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
-    >
+    <div className="group relative flex gap-4 rounded-xl border border-neutral-200 bg-white p-4 transition hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700">
+      {/* Card-level link (covers entire card) */}
+      <Link
+        href={`/layoff/${layoff.id}`}
+        className="absolute inset-0 z-0 rounded-xl"
+        aria-label={title}
+      />
+
       {/* Logo / Initials */}
       {layoff.company.logoUrl ? (
         <Image
@@ -70,9 +74,12 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+            <Link
+              href={`/company/${layoff.company.slug}`}
+              className="relative z-10 text-sm font-semibold text-neutral-900 hover:text-teal-700 dark:text-white dark:hover:text-teal-400"
+            >
               {layoff.company.name}
-            </p>
+            </Link>
             <p className="mt-0.5 truncate text-sm text-neutral-600 dark:text-neutral-300">
               {title}
             </p>
@@ -82,21 +89,27 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
           </span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
-          <span>
+          <Link
+            href={`/country/${layoff.country}`}
+            className="relative z-10 hover:text-teal-700 dark:hover:text-teal-400"
+          >
             {flag} {countryName}
-          </span>
+          </Link>
           {layoff.affectedCount != null && (
             <span>
               {t("affected")}: {layoff.affectedCount.toLocaleString("de-DE")}
             </span>
           )}
           {layoff.company.industrySlug && (
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 dark:bg-neutral-800">
+            <Link
+              href={`/industry/${layoff.company.industrySlug}`}
+              className="relative z-10 rounded-full bg-neutral-100 px-2 py-0.5 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+            >
               {locale === "de" ? layoff.company.industry.nameDe : layoff.company.industry.nameEn}
-            </span>
+            </Link>
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

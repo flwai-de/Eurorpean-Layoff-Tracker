@@ -8,7 +8,7 @@ import {
   type Company,
   type Industry,
 } from "@/lib/db/schema";
-import { eq, and, sql, desc, gte, lte, count, sum, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, asc, gte, lte, count, sum, inArray, isNull } from "drizzle-orm";
 import { cache } from "@/lib/utils/cache";
 
 // ============================================================
@@ -535,4 +535,52 @@ export async function getTrendingLayoffs(limit: number = 5): Promise<LayoffWithC
       },
     },
   }));
+}
+
+// ============================================================
+// i) getIndustriesWithCounts
+// ============================================================
+
+export interface IndustryWithCount extends Industry {
+  layoffCount: number;
+}
+
+export async function getIndustriesWithCounts(): Promise<IndustryWithCount[]> {
+  // Get all parent industries (no parentSlug)
+  const parents = await db
+    .select()
+    .from(industries)
+    .where(isNull(industries.parentSlug))
+    .orderBy(asc(industries.sortOrder));
+
+  // Get all child industries
+  const children = await db
+    .select()
+    .from(industries)
+    .where(sql`${industries.parentSlug} IS NOT NULL`)
+    .orderBy(asc(industries.sortOrder));
+
+  // Count verified layoffs per industry slug
+  const counts = await db
+    .select({
+      industrySlug: companies.industrySlug,
+      layoffCount: count(),
+    })
+    .from(layoffs)
+    .innerJoin(companies, eq(layoffs.companyId, companies.id))
+    .where(eq(layoffs.status, "verified"))
+    .groupBy(companies.industrySlug);
+
+  const countMap = new Map(counts.map((c) => [c.industrySlug, c.layoffCount]));
+
+  // Build result: parents with aggregated counts (own + children)
+  const result: IndustryWithCount[] = [];
+  for (const parent of parents) {
+    const childSlugs = children.filter((c) => c.parentSlug === parent.slug);
+    const parentCount = (countMap.get(parent.slug) ?? 0) +
+      childSlugs.reduce((sum, c) => sum + (countMap.get(c.slug) ?? 0), 0);
+    result.push({ ...parent, layoffCount: parentCount });
+  }
+
+  return result;
 }

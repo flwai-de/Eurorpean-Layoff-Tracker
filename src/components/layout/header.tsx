@@ -17,6 +17,9 @@ export default function Header() {
           <Link href="/" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("home")}
           </Link>
+          <Link href="/industries" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            {t("industries")}
+          </Link>
           <Link href="/#newsletter" className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
             {t("newsletter")}
           </Link>
