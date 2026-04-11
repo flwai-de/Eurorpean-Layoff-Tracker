@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { layoffs, companies, newsletterSubscribers, submissions } from "@/lib/db/schema";
-import { eq, desc, count, and, sql, ilike, gte } from "drizzle-orm";
+import { layoffs, companies, industries, newsletterSubscribers, submissions } from "@/lib/db/schema";
+import { eq, desc, asc, count, and, sql, ilike, gte } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
@@ -41,14 +41,43 @@ function getAdminIdFromSession(session: { user?: { id?: string } } | null): stri
   return null;
 }
 
-export async function getLayoffs(status: StatusFilter = "all", search?: string, page = 1, perPage = 25) {
+type SortField = "date" | "company" | "affected" | "country" | "status";
+type SortOrder = "asc" | "desc";
+
+interface GetLayoffsOptions {
+  status?: StatusFilter;
+  search?: string;
+  country?: string;
+  industry?: string;
+  sort?: SortField;
+  order?: SortOrder;
+  page?: number;
+  perPage?: number;
+}
+
+export async function getLayoffs(opts: GetLayoffsOptions = {}) {
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" } as const;
 
+  const { status = "all", search, country, industry, sort = "date", order = "desc", page = 1, perPage = 25 } = opts;
   const offset = (page - 1) * perPage;
+
   const conditions = [];
   if (status !== "all") conditions.push(eq(layoffs.status, status));
+  if (search) conditions.push(ilike(companies.name, `%${search}%`));
+  if (country) conditions.push(eq(layoffs.country, country));
+  if (industry) conditions.push(eq(companies.industrySlug, industry));
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const sortColumnMap = {
+    date: layoffs.date,
+    company: companies.name,
+    affected: layoffs.affectedCount,
+    country: layoffs.country,
+    status: layoffs.status,
+  } as const;
+  const sortCol = sortColumnMap[sort] ?? layoffs.date;
+  const orderFn = order === "asc" ? asc : desc;
 
   const [items, [total]] = await Promise.all([
     db
@@ -60,18 +89,36 @@ export async function getLayoffs(status: StatusFilter = "all", search?: string, 
       })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
-      .where(search ? and(where, ilike(companies.name, `%${search}%`)) : where)
-      .orderBy(desc(layoffs.date))
+      .where(where)
+      .orderBy(orderFn(sortCol))
       .limit(perPage)
       .offset(offset),
     db
       .select({ count: count() })
       .from(layoffs)
       .innerJoin(companies, eq(layoffs.companyId, companies.id))
-      .where(search ? and(where, ilike(companies.name, `%${search}%`)) : where),
+      .where(where),
   ]);
 
   return { success: true, data: { items, total: total.count, page, perPage } };
+}
+
+export async function getLayoffFilterOptions() {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" } as const;
+
+  const [countryRows, industryRows] = await Promise.all([
+    db.selectDistinct({ country: layoffs.country }).from(layoffs).orderBy(asc(layoffs.country)),
+    db.select({ slug: industries.slug, nameEn: industries.nameEn }).from(industries).orderBy(asc(industries.sortOrder)),
+  ]);
+
+  return {
+    success: true,
+    data: {
+      countries: countryRows.map((r) => r.country),
+      industries: industryRows,
+    },
+  };
 }
 
 export async function getLayoffById(id: string) {
@@ -212,6 +259,22 @@ export async function rejectLayoff(id: string): Promise<ActionResult> {
     verifiedBy: adminId,
     updatedAt: new Date(),
   }).where(eq(layoffs.id, id));
+
+  revalidatePath("/admin/layoffs");
+  return { success: true };
+}
+
+export async function deleteLayoff(id: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const user = session.user as typeof session.user & { role?: string };
+  if (user.role !== "admin") return { success: false, error: "Only admins can delete layoffs" };
+
+  const parsed = z.string().uuid().safeParse(id);
+  if (!parsed.success) return { success: false, error: "Invalid ID" };
+
+  await db.delete(layoffs).where(eq(layoffs.id, id));
 
   revalidatePath("/admin/layoffs");
   return { success: true };
