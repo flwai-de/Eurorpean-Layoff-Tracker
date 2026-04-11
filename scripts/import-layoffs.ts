@@ -45,14 +45,31 @@ const INDUSTRY_MAP: Record<string, string> = {
 // Helpers
 // ============================================================
 
+const TRANSLITERATION: Record<string, string> = {
+  "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss",
+  "Ä": "Ae", "Ö": "Oe", "Ü": "Ue",
+  "à": "a", "á": "a", "â": "a", "ã": "a", "å": "a",
+  "è": "e", "é": "e", "ê": "e", "ë": "e",
+  "ì": "i", "í": "i", "î": "i", "ï": "i",
+  "ò": "o", "ó": "o", "ô": "o", "õ": "o",
+  "ù": "u", "ú": "u", "û": "u",
+  "ý": "y", "ÿ": "y",
+  "ñ": "n", "ç": "c", "ð": "d", "þ": "th",
+  "Ø": "O", "ø": "o", "Æ": "Ae", "æ": "ae",
+  "Đ": "D", "đ": "d", "ł": "l", "Ł": "L",
+  "ń": "n", "ś": "s", "ź": "z", "ż": "z",
+  "č": "c", "ř": "r", "š": "s", "ž": "z", "ě": "e", "ů": "u",
+  "ă": "a", "ș": "s", "ț": "t",
+};
+
+function transliterate(text: string): string {
+  return text.replace(/[^\x00-\x7F]/g, (ch) => TRANSLITERATION[ch] ?? "");
+}
+
 function slugify(name: string): string {
-  return name
+  return transliterate(name)
     .toLowerCase()
     .trim()
-    .replace(/[äÄ]/g, "ae")
-    .replace(/[öÖ]/g, "oe")
-    .replace(/[üÜ]/g, "ue")
-    .replace(/ß/g, "ss")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -138,17 +155,30 @@ async function main() {
         if (existing.length > 0) {
           companyId = existing[0].id;
         } else {
-          const [newCompany] = await tx
-            .insert(companies)
-            .values({
-              name: companyName,
-              slug: slugify(companyName),
-              industrySlug,
-              countryHq,
-              companyType: "enterprise",
-            })
-            .returning({ id: companies.id });
-          companyId = newCompany.id;
+          // Check if slug already exists (different company name, same slug)
+          let slug = slugify(companyName);
+          const slugExists = await tx
+            .select({ id: companies.id })
+            .from(companies)
+            .where(eq(companies.slug, slug))
+            .limit(1);
+
+          if (slugExists.length > 0) {
+            // Slug collision with a different company name — use existing company
+            companyId = slugExists[0].id;
+          } else {
+            const [newCompany] = await tx
+              .insert(companies)
+              .values({
+                name: companyName,
+                slug,
+                industrySlug,
+                countryHq,
+                companyType: "enterprise",
+              })
+              .returning({ id: companies.id });
+            companyId = newCompany.id;
+          }
         }
 
         // Duplicate check: same company + date ±7 days + affected_count ±10%
