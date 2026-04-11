@@ -37,6 +37,62 @@ function generateToken(): string {
   return crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
 }
 
+function buildConfirmationHtml(confirmUrl: string, language: "de" | "en"): string {
+  const isDE = language === "de";
+  const tagline = isDE
+    ? "Europas Layoff-Tracker"
+    : "Europe&#39;s Layoff Tracker";
+  const greeting = isDE ? "Hallo," : "Hi there,";
+  const bodyText = isDE
+    ? "vielen Dank f\u00fcr dein Interesse am dimissio Newsletter. Bitte best\u00e4tige deine Anmeldung, indem du auf den Button klickst:"
+    : "thanks for signing up for the dimissio newsletter. Please confirm your subscription by clicking the button below:";
+  const ctaText = isDE ? "Anmeldung best\u00e4tigen" : "Confirm Subscription";
+  const disclaimer = isDE
+    ? "Falls du dich nicht angemeldet hast, kannst du diese E-Mail einfach ignorieren."
+    : "If you didn&#39;t sign up, you can safely ignore this email.";
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <span style="font-size:28px;font-weight:700;color:#2dd4bf;letter-spacing:-0.5px;">dimissio</span>
+              <br/>
+              <span style="font-size:13px;color:#888;">${tagline}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#111;border:1px solid #2a2a2a;border-radius:8px;padding:32px;">
+              <p style="margin:0 0 16px;font-size:15px;color:#fff;">${greeting}</p>
+              <p style="margin:0 0 28px;font-size:14px;color:#ccc;line-height:1.6;">${bodyText}</p>
+              <table cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${confirmUrl}" style="display:inline-block;background-color:#2dd4bf;color:#0a0a0a;font-size:15px;font-weight:600;text-decoration:none;border-radius:6px;padding:14px 32px;">${ctaText}</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:28px 0 0;font-size:12px;color:#888;line-height:1.5;">${disclaimer}</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:24px;">
+              <a href="https://dimissio.eu" style="font-size:12px;color:#555;text-decoration:none;">dimissio.eu</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 async function sendConfirmationEmail(
   email: string,
   token: string,
@@ -48,7 +104,7 @@ async function sendConfirmationEmail(
     ? "Bitte bestätige deine Anmeldung — Dimissio"
     : "Please confirm your subscription — Dimissio";
 
-  const body = language === "de"
+  const textBody = language === "de"
     ? `Hallo,\n\nbitte bestätige deine Newsletter-Anmeldung bei Dimissio:\n\n${confirmUrl}\n\nFalls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren.\n\nViele Grüße,\nDimissio`
     : `Hi,\n\nplease confirm your newsletter subscription at Dimissio:\n\n${confirmUrl}\n\nIf you didn't sign up, you can safely ignore this email.\n\nBest,\nDimissio`;
 
@@ -56,7 +112,8 @@ async function sendConfirmationEmail(
     from: "Dimissio <newsletter@dimissio.eu>",
     to: email,
     subject,
-    text: body,
+    html: buildConfirmationHtml(confirmUrl, language),
+    text: textBody,
   });
 }
 
