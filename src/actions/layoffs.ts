@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { layoffs, companies, newsletterSubscribers, submissions } from "@/lib/db/schema";
 import { eq, desc, count, and, sql, ilike, gte } from "drizzle-orm";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { socialPostQueue } from "@/lib/queue";
 
@@ -195,6 +196,7 @@ export async function verifyLayoff(id: string): Promise<ActionResult> {
     removeOnFail: 200,
   });
 
+  revalidatePath("/admin/layoffs");
   return { success: true };
 }
 
@@ -211,6 +213,7 @@ export async function rejectLayoff(id: string): Promise<ActionResult> {
     updatedAt: new Date(),
   }).where(eq(layoffs.id, id));
 
+  revalidatePath("/admin/layoffs");
   return { success: true };
 }
 
