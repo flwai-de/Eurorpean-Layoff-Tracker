@@ -13,6 +13,7 @@ import {
   getTopLayoffsOfYear,
 } from "@/lib/queries/public";
 import { resolveIndustryFilter } from "@/lib/utils/industry-groups";
+import ConfirmationBanner from "@/components/layout/confirmation-banner";
 import HeroStats from "@/components/layoffs/hero-stats";
 import TrendChart from "@/components/charts/trend-chart";
 import LayoffFeed from "@/components/layoffs/layoff-feed";
@@ -75,6 +76,9 @@ export default async function HomePage({
 
   return (
     <>
+      <Suspense>
+        <ConfirmationBanner />
+      </Suspense>
       <HeroStats stats={stats} />
       <TrendChart
         yearsData={yearsData}
