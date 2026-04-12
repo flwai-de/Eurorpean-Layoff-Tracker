@@ -100,6 +100,16 @@
     "disclaimer": "Layoffs taking place in {country} — regardless of company headquarters.",
     "metaTitle": "Layoffs in {country} | Dimissio"
   },
+  "industryGroups": {
+    "tech": "Tech",
+    "automotive": "Automotive",
+    "industry": "Industry",
+    "finance": "Finance",
+    "health": "Health",
+    "retail": "Retail & Consumer",
+    "media": "Media & Telecom",
+    "other": "Other"
+  },
   "filters": {
     "country": "Country",
     "industry": "Industry",

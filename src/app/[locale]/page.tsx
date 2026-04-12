@@ -12,6 +12,7 @@ import {
   getIndustryChipStats,
   getTopLayoffsOfYear,
 } from "@/lib/queries/public";
+import { resolveIndustryFilter } from "@/lib/utils/industry-groups";
 import HeroStats from "@/components/layoffs/hero-stats";
 import TrendChart from "@/components/charts/trend-chart";
 import LayoffFeed from "@/components/layoffs/layoff-feed";
@@ -63,7 +64,7 @@ export default async function HomePage({
         limit: PER_PAGE,
         offset: (page - 1) * PER_PAGE,
         country,
-        industrySlug: industry,
+        ...resolveIndustryFilter(industry),
         dateFrom,
       }),
       getTrendingLayoffs(),

@@ -100,6 +100,16 @@
     "disclaimer": "Entlassungen, die in {country} stattfinden — unabhängig vom Firmensitz.",
     "metaTitle": "Layoffs in {country} | Dimissio"
   },
+  "industryGroups": {
+    "tech": "Tech",
+    "automotive": "Automotive",
+    "industry": "Industrie",
+    "finance": "Finanzen",
+    "health": "Gesundheit",
+    "retail": "Handel & Konsum",
+    "media": "Medien & Telko",
+    "other": "Sonstige"
+  },
   "filters": {
     "country": "Land",
     "industry": "Branche",

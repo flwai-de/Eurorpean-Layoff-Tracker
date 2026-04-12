@@ -10,6 +10,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, sql, desc, asc, gte, lte, count, sum, inArray, isNull } from "drizzle-orm";
 import { cache } from "@/lib/utils/cache";
+import { INDUSTRY_GROUPS, OTHER_GROUP, getGroupForSlug } from "@/lib/utils/industry-groups";
 
 // ============================================================
 // Types
@@ -39,16 +40,21 @@ export async function getVerifiedLayoffs(opts: {
   offset?: number;
   country?: string;
   industrySlug?: string;
+  industrySlugs?: string[];
   dateFrom?: string;
   dateTo?: string;
 } = {}): Promise<{ data: LayoffWithCompany[]; total: number }> {
-  const { limit = 20, offset = 0, country, industrySlug, dateFrom, dateTo } = opts;
+  const { limit = 20, offset = 0, country, industrySlug, industrySlugs, dateFrom, dateTo } = opts;
 
   const conditions = [eq(layoffs.status, "verified")];
   if (country) conditions.push(eq(layoffs.country, country));
   if (dateFrom) conditions.push(gte(layoffs.date, dateFrom));
   if (dateTo) conditions.push(lte(layoffs.date, dateTo));
-  if (industrySlug) conditions.push(eq(companies.industrySlug, industrySlug));
+  if (industrySlugs && industrySlugs.length > 0) {
+    conditions.push(inArray(companies.industrySlug, industrySlugs));
+  } else if (industrySlug) {
+    conditions.push(eq(companies.industrySlug, industrySlug));
+  }
 
   const where = and(...conditions);
 
@@ -372,35 +378,49 @@ export async function getTrendChartByYears(years: number[]): Promise<Record<numb
 // ============================================================
 
 export interface IndustryChipStat {
-  slug: string;
-  nameEn: string;
-  nameDe: string;
+  key: string;
+  labelEn: string;
+  labelDe: string;
+  layoffCount: number;
   affected: number;
 }
 
 export async function getIndustryChipStats(): Promise<IndustryChipStat[]> {
   const rows = await db
     .select({
-      slug: industries.slug,
-      nameEn: industries.nameEn,
-      nameDe: industries.nameDe,
+      slug: companies.industrySlug,
       layoffCount: count(layoffs.id),
       affected: sum(layoffs.affectedCount),
     })
     .from(layoffs)
     .innerJoin(companies, eq(layoffs.companyId, companies.id))
-    .innerJoin(industries, eq(companies.industrySlug, industries.slug))
     .where(eq(layoffs.status, "verified"))
-    .groupBy(industries.slug, industries.nameEn, industries.nameDe)
-    .having(sql`count(${layoffs.id}) >= 1`)
-    .orderBy(desc(sum(layoffs.affectedCount)));
+    .groupBy(companies.industrySlug);
 
-  return rows.map((r) => ({
-    slug: r.slug,
-    nameEn: r.nameEn,
-    nameDe: r.nameDe,
-    affected: Number(r.affected ?? 0),
-  }));
+  const agg = new Map<string, { layoffCount: number; affected: number }>();
+  for (const r of rows) {
+    const groupKey = getGroupForSlug(r.slug) ?? OTHER_GROUP.key;
+    const cur = agg.get(groupKey) ?? { layoffCount: 0, affected: 0 };
+    cur.layoffCount += r.layoffCount;
+    cur.affected += Number(r.affected ?? 0);
+    agg.set(groupKey, cur);
+  }
+
+  const groupOrder = [...INDUSTRY_GROUPS, OTHER_GROUP];
+  const result: IndustryChipStat[] = [];
+  for (const g of groupOrder) {
+    const stat = agg.get(g.key);
+    if (!stat || stat.layoffCount === 0) continue;
+    result.push({
+      key: g.key,
+      labelEn: g.labelEn,
+      labelDe: g.labelDe,
+      layoffCount: stat.layoffCount,
+      affected: stat.affected,
+    });
+  }
+  result.sort((a, b) => b.affected - a.affected);
+  return result;
 }
 
 // ============================================================
