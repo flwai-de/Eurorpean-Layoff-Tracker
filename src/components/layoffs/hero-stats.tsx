@@ -17,22 +17,19 @@ function trendPct(current: number, prev: number | null): number | null {
 function TrendIndicator({
   pct,
   prevYear,
-  locale,
 }: {
   pct: number | null;
   prevYear: number;
-  locale: string;
 }) {
-  if (pct == null) return <p className="mt-1 h-4" />;
+  if (pct == null) return <p className="mt-1 h-4 text-xs">&nbsp;</p>;
   const up = pct >= 0;
   const arrow = up ? "\u2191" : "\u2193";
   const color = up
     ? "text-red-500 dark:text-red-400"
     : "text-green-600 dark:text-green-400";
-  const abs = Math.abs(pct);
   return (
     <p className={`mt-1 text-xs font-medium ${color}`}>
-      {arrow} {abs}% {locale === "de" ? "vs." : "vs."} {prevYear}
+      {arrow} {Math.abs(pct)}% vs. {prevYear}
     </p>
   );
 }
@@ -42,7 +39,12 @@ export default function HeroStats({ stats }: HeroStatsProps) {
   const locale = useLocale();
   const prevYear = stats.currentYear - 1;
 
-  const cards = [
+  const cards: Array<{
+    label: string;
+    value: string;
+    pct: number | null;
+    sub?: string;
+  }> = [
     {
       label: t("totalLayoffs"),
       value: fmt(stats.totalLayoffs, locale),
@@ -54,10 +56,10 @@ export default function HeroStats({ stats }: HeroStatsProps) {
       pct: trendPct(stats.yearAffected, stats.totalAffectedPrev),
     },
     {
-      label: t("thisYear", { year: stats.currentYear }),
-      value: `${fmt(stats.yearLayoffs, locale)} \u00b7 ${fmt(stats.yearAffected, locale)}`,
+      label: t("affectedYear", { year: stats.currentYear }),
+      value: fmt(stats.yearAffected, locale),
       pct: trendPct(stats.yearAffected, stats.prevYearAffected),
-      small: true,
+      sub: t("yearLayoffsCount", { count: fmt(stats.yearLayoffs, locale) }),
     },
     {
       label: t("dailyAvg"),
@@ -71,23 +73,26 @@ export default function HeroStats({ stats }: HeroStatsProps) {
       <h1 className="text-center text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
         {t("heroHeadline")}
       </h1>
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 items-stretch gap-4 lg:grid-cols-4">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
+            className="flex min-h-[140px] flex-col rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"
           >
-            <p
-              className={`font-bold tabular-nums text-teal-700 dark:text-teal-400 ${
-                card.small ? "text-xl sm:text-2xl" : "text-3xl sm:text-4xl"
-              }`}
-            >
+            <p className="text-3xl font-bold tabular-nums text-teal-700 dark:text-teal-400">
               {card.value}
             </p>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               {card.label}
             </p>
-            <TrendIndicator pct={card.pct} prevYear={prevYear} locale={locale} />
+            {card.sub ? (
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                {card.sub}
+              </p>
+            ) : null}
+            <div className="mt-auto">
+              <TrendIndicator pct={card.pct} prevYear={prevYear} />
+            </div>
           </div>
         ))}
       </div>
