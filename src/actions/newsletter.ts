@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { newsletterSubscribers, newsletterIssues, layoffs } from "@/lib/db/schema";
 import { eq, desc, count, inArray } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/utils/rate-limit";
@@ -216,6 +217,44 @@ export async function getSubscribers(
     total: total.count,
     stats: Object.fromEntries(stats.map((s) => [s.status, s.count])),
   };
+}
+
+// ============================================================
+// Admin: delete subscriber
+// ============================================================
+
+const uuidSchema = z.string().uuid();
+
+export async function deleteSubscriber(id: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const parsed = uuidSchema.safeParse(id);
+  if (!parsed.success) return { success: false, error: "Invalid id" };
+
+  await db
+    .delete(newsletterSubscribers)
+    .where(eq(newsletterSubscribers.id, parsed.data));
+
+  revalidatePath("/admin/subscribers");
+  return { success: true };
+}
+
+export async function deleteSubscribersBulk(
+  ids: string[],
+): Promise<ActionResult & { data?: { count: number } }> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const parsed = z.array(uuidSchema).min(1).safeParse(ids);
+  if (!parsed.success) return { success: false, error: "Invalid ids" };
+
+  await db
+    .delete(newsletterSubscribers)
+    .where(inArray(newsletterSubscribers.id, parsed.data));
+
+  revalidatePath("/admin/subscribers");
+  return { success: true, data: { count: parsed.data.length } };
 }
 
 // ============================================================

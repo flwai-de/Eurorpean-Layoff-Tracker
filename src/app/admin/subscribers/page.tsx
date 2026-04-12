@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSubscribers } from "@/actions/newsletter";
+import SubscriberList from "@/components/admin/subscriber-list";
 
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -55,45 +56,7 @@ export default async function SubscribersPage({ searchParams }: Props) {
       {result.data.length === 0 ? (
         <p className="text-sm text-neutral-400">No subscribers found.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-800">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-800 bg-neutral-900 text-left text-xs uppercase tracking-wide text-neutral-400">
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Language</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Confirmed</th>
-                <th className="px-4 py-3">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.data.map((sub) => (
-                <tr key={sub.id} className="border-b border-neutral-800/50 transition hover:bg-neutral-900/50">
-                  <td className="px-4 py-3 text-white">{sub.email}</td>
-                  <td className="px-4 py-3 text-neutral-300">{sub.language.toUpperCase()}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      sub.status === "active" ? "bg-green-900/50 text-green-400"
-                        : sub.status === "pending" ? "bg-yellow-900/50 text-yellow-400"
-                        : sub.status === "bounced" ? "bg-red-900/50 text-red-400"
-                        : "bg-neutral-800 text-neutral-400"
-                    }`}>
-                      {sub.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-neutral-400">
-                    {sub.confirmedAt
-                      ? new Date(sub.confirmedAt).toLocaleDateString("de-DE")
-                      : "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-neutral-400">
-                    {new Date(sub.createdAt).toLocaleDateString("de-DE")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SubscriberList subscribers={result.data} />
       )}
     </div>
   );

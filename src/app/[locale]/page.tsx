@@ -1,21 +1,23 @@
 import { Suspense } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/lib/i18n/routing";
+import { useTranslations } from "next-intl";
 import { db } from "@/lib/db";
 import { industries } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
 import {
   getHeroStats,
-  getTrendChartData,
   getVerifiedLayoffs,
   getTrendingLayoffs,
+  getYearSummaries,
+  getTrendChartByYears,
+  getIndustryChipStats,
+  getTopLayoffsOfYear,
 } from "@/lib/queries/public";
-import { getCountryFlag, getCountryName } from "@/lib/utils/countries";
-import { generateLayoffTitle } from "@/lib/utils/generate-title";
 import HeroStats from "@/components/layoffs/hero-stats";
 import TrendChart from "@/components/charts/trend-chart";
 import LayoffFeed from "@/components/layoffs/layoff-feed";
 import LayoffFilters from "@/components/layoffs/layoff-filters";
+import IndustryChips from "@/components/layoffs/industry-chips";
+import SidebarRankings from "@/components/layoffs/sidebar-rankings";
 
 const PER_PAGE = 20;
 
@@ -44,36 +46,58 @@ export default async function HomePage({
     dateFrom = d.toISOString().split("T")[0];
   }
 
-  const [stats, chartData, layoffsResult, trending, industryList] = await Promise.all([
-    getHeroStats(),
-    getTrendChartData(),
-    getVerifiedLayoffs({
-      limit: PER_PAGE,
-      offset: (page - 1) * PER_PAGE,
-      country,
-      industrySlug: industry,
-      dateFrom,
-    }),
-    getTrendingLayoffs(),
-    db.select().from(industries).orderBy(asc(industries.sortOrder)),
-  ]);
+  const stats = await getHeroStats();
+  const summaries = await getYearSummaries();
+  const currentYear = stats.currentYear;
+
+  // Years for chart tabs: current year + up to 3 prior years with data, always include currentYear
+  const yearSet = new Set<number>([currentYear, ...summaries.map((s) => s.year)]);
+  const chartYears = Array.from(yearSet)
+    .sort((a, b) => b - a)
+    .slice(0, 4);
+
+  const [yearsData, layoffsResult, trending, topOfYear, industryList, chipStats] =
+    await Promise.all([
+      getTrendChartByYears(chartYears),
+      getVerifiedLayoffs({
+        limit: PER_PAGE,
+        offset: (page - 1) * PER_PAGE,
+        country,
+        industrySlug: industry,
+        dateFrom,
+      }),
+      getTrendingLayoffs(),
+      getTopLayoffsOfYear(currentYear, 5),
+      db.select().from(industries).orderBy(asc(industries.sortOrder)),
+      getIndustryChipStats(),
+    ]);
 
   return (
     <>
       <HeroStats stats={stats} />
-      <TrendChart data={chartData} />
+      <TrendChart
+        yearsData={yearsData}
+        summaries={summaries}
+        defaultYear={currentYear}
+      />
 
       <section className="mx-auto max-w-6xl px-6 py-8">
         {/* Filters */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Suspense>
             <LayoffFilters industries={industryList} />
           </Suspense>
         </div>
 
-        {/* Feed + Trending */}
+        {/* Industry chips */}
+        <div className="mb-6">
+          <Suspense>
+            <IndustryChips chips={chipStats} />
+          </Suspense>
+        </div>
+
+        {/* Feed + Sidebar */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Feed — 2/3 */}
           <div className="lg:col-span-2">
             <FeedTitle />
             <div className="mt-4">
@@ -86,9 +110,12 @@ export default async function HomePage({
             </div>
           </div>
 
-          {/* Trending sidebar — 1/3 */}
           <div>
-            <TrendingSidebar trending={trending} />
+            <SidebarRankings
+              topLayoffs={topOfYear}
+              trending={trending}
+              currentYear={currentYear}
+            />
           </div>
         </div>
       </section>
@@ -102,66 +129,5 @@ function FeedTitle() {
     <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
       {t("recentTitle")}
     </h2>
-  );
-}
-
-function TrendingSidebar({
-  trending,
-}: {
-  trending: Awaited<ReturnType<typeof getTrendingLayoffs>>;
-}) {
-  const t = useTranslations("home");
-  const tLayoff = useTranslations("layoff");
-  const locale = useLocale() as "de" | "en";
-
-  return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-        {t("trendingTitle")}
-      </h3>
-      {trending.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-400">{t("noData")}</p>
-      ) : (
-        <ul className="mt-4 space-y-3">
-          {trending.map((layoff, i) => {
-            const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
-            const title = rawTitle ?? generateLayoffTitle({
-              companyName: layoff.company.name,
-              affectedCount: layoff.affectedCount,
-              affectedPercentage: layoff.affectedPercentage,
-              isShutdown: layoff.isShutdown,
-            }, locale);
-            return (
-              <li key={layoff.id}>
-                <Link
-                  href={`/layoff/${layoff.id}`}
-                  className="group block"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-neutral-900 transition group-hover:text-teal-700 dark:text-white dark:group-hover:text-teal-400">
-                        {layoff.company.name}
-                      </p>
-                      <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
-                        {title}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400">
-                        <span>{getCountryFlag(layoff.country)} {getCountryName(layoff.country, locale)}</span>
-                        {layoff.affectedCount != null && (
-                          <span>{tLayoff("affected")}: {layoff.affectedCount.toLocaleString("de-DE")}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
   );
 }

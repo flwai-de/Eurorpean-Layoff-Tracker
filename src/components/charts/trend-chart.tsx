@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart,
@@ -11,8 +12,22 @@ import {
   type TooltipProps,
 } from "recharts";
 
+interface MonthlyPoint {
+  month: string;
+  layoffCount: number;
+  affectedCount: number;
+}
+
+interface YearSummary {
+  year: number;
+  layoffCount: number;
+  affectedCount: number;
+}
+
 interface TrendChartProps {
-  data: { month: string; layoffCount: number; affectedCount: number }[];
+  yearsData: Record<number, MonthlyPoint[]>;
+  summaries: YearSummary[];
+  defaultYear: number;
 }
 
 const MONTHS_DE: Record<string, string> = {
@@ -35,7 +50,7 @@ function formatMonth(yyyymm: string, locale: string): string {
 
 function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload as TrendChartProps["data"][number] | undefined;
+  const entry = payload[0]?.payload as (MonthlyPoint & { label: string }) | undefined;
   if (!entry) return null;
 
   return (
@@ -51,20 +66,64 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   );
 }
 
-export default function TrendChart({ data }: TrendChartProps) {
+export default function TrendChart({ yearsData, summaries, defaultYear }: TrendChartProps) {
   const t = useTranslations("home");
   const locale = useLocale();
+  const [activeYear, setActiveYear] = useState(defaultYear);
 
-  const chartData = data.map((d) => ({
+  const years = useMemo(
+    () => Object.keys(yearsData).map(Number).sort((a, b) => b - a),
+    [yearsData],
+  );
+
+  const summaryMap = useMemo(
+    () => new Map(summaries.map((s) => [s.year, s])),
+    [summaries],
+  );
+
+  const chartData = (yearsData[activeYear] ?? []).map((d) => ({
     ...d,
     label: formatMonth(d.month, locale),
   }));
 
+  const nf = locale === "de" ? "de-DE" : "en-US";
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-8">
       <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-        {t("chartTitle")}
+        {t("chartTitle", { year: activeYear })}
       </h2>
+
+      {years.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {years.map((y) => {
+            const active = y === activeYear;
+            const s = summaryMap.get(y);
+            return (
+              <button
+                key={y}
+                onClick={() => setActiveYear(y)}
+                className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  active
+                    ? "border-teal-500 bg-teal-50 text-teal-800 dark:border-teal-400 dark:bg-teal-950/40 dark:text-teal-300"
+                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                }`}
+              >
+                <span className="block font-semibold">{y}</span>
+                {s ? (
+                  <span className="block text-xs opacity-80">
+                    {s.layoffCount.toLocaleString(nf)} {t("layoffsWord")} &middot;{" "}
+                    {s.affectedCount.toLocaleString(nf)} {t("affectedWord")}
+                  </span>
+                ) : (
+                  <span className="block text-xs opacity-60">{t("noData")}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>

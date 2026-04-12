@@ -189,11 +189,20 @@ export async function getCompanyBySlug(slug: string): Promise<CompanyWithLayoffs
 // d) getHeroStats
 // ============================================================
 
-interface HeroStats {
+export interface HeroStats {
   totalLayoffs: number;
   totalAffected: number;
-  thisMonth: number;
-  thisWeek: number;
+  currentYear: number;
+  yearLayoffs: number;
+  yearAffected: number;
+  dailyAvgAffected: number;
+  // Prior year same-period (Jan 1 → same day/month)
+  prevYearLayoffs: number | null;
+  prevYearAffected: number | null;
+  prevDailyAvgAffected: number | null;
+  // For total trend — compares YTD layoffs/affected to prior YTD
+  totalLayoffsPrev: number | null;
+  totalAffectedPrev: number | null;
 }
 
 export async function getHeroStats(): Promise<HeroStats> {
@@ -201,18 +210,23 @@ export async function getHeroStats(): Promise<HeroStats> {
   if (cached) return cached;
 
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
-  const dayOfWeek = now.getDay();
-  const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - mondayOffset);
-  const weekStartStr = weekStart.toISOString().split("T")[0];
+  const year = now.getFullYear();
+  const yearStart = `${year}-01-01`;
+  const todayStr = now.toISOString().split("T")[0];
+
+  // Prior year window: Jan 1 (Y-1) through same month/day of (Y-1)
+  const prevYearStart = `${year - 1}-01-01`;
+  const mmdd = todayStr.slice(4); // "-MM-DD"
+  const prevYearEnd = `${year - 1}${mmdd}`;
+
+  // Day count (inclusive) since Jan 1
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysSinceJan1 =
+    Math.floor((now.getTime() - new Date(yearStart).getTime()) / msPerDay) + 1;
 
   const verified = eq(layoffs.status, "verified");
 
-  const [totals, monthly, weekly] = await Promise.all([
+  const [totals, yearRow, prevYearRow] = await Promise.all([
     db
       .select({
         totalLayoffs: count(),
@@ -221,24 +235,274 @@ export async function getHeroStats(): Promise<HeroStats> {
       .from(layoffs)
       .where(verified),
     db
-      .select({ count: count() })
+      .select({
+        layoffCount: count(),
+        affected: sum(layoffs.affectedCount),
+      })
       .from(layoffs)
-      .where(and(verified, gte(layoffs.date, monthStart))),
+      .where(and(verified, gte(layoffs.date, yearStart))),
     db
-      .select({ count: count() })
+      .select({
+        layoffCount: count(),
+        affected: sum(layoffs.affectedCount),
+      })
       .from(layoffs)
-      .where(and(verified, gte(layoffs.date, weekStartStr))),
+      .where(
+        and(
+          verified,
+          gte(layoffs.date, prevYearStart),
+          lte(layoffs.date, prevYearEnd),
+        ),
+      ),
   ]);
+
+  const yearLayoffs = yearRow[0]?.layoffCount ?? 0;
+  const yearAffected = Number(yearRow[0]?.affected ?? 0);
+  const prevYearLayoffs = prevYearRow[0]?.layoffCount ?? 0;
+  const prevYearAffected = Number(prevYearRow[0]?.affected ?? 0);
+
+  const hasPrev = prevYearLayoffs > 0 || prevYearAffected > 0;
+  const prevDailyAvg = hasPrev
+    ? Math.round(prevYearAffected / Math.max(1, daysSinceJan1))
+    : null;
 
   const stats: HeroStats = {
     totalLayoffs: totals[0]?.totalLayoffs ?? 0,
     totalAffected: Number(totals[0]?.totalAffected ?? 0),
-    thisMonth: monthly[0]?.count ?? 0,
-    thisWeek: weekly[0]?.count ?? 0,
+    currentYear: year,
+    yearLayoffs,
+    yearAffected,
+    dailyAvgAffected: Math.round(yearAffected / Math.max(1, daysSinceJan1)),
+    prevYearLayoffs: hasPrev ? prevYearLayoffs : null,
+    prevYearAffected: hasPrev ? prevYearAffected : null,
+    prevDailyAvgAffected: prevDailyAvg,
+    totalLayoffsPrev: hasPrev ? prevYearLayoffs : null,
+    totalAffectedPrev: hasPrev ? prevYearAffected : null,
   };
 
   cache.set("heroStats", stats, 5 * 60 * 1000);
   return stats;
+}
+
+// ============================================================
+// d2) Year-based chart + summaries
+// ============================================================
+
+export interface YearSummary {
+  year: number;
+  layoffCount: number;
+  affectedCount: number;
+}
+
+export interface MonthlyPoint {
+  month: string; // "YYYY-MM"
+  layoffCount: number;
+  affectedCount: number;
+}
+
+export async function getYearSummaries(): Promise<YearSummary[]> {
+  const rows = await db
+    .select({
+      year: sql<string>`to_char(${layoffs.date}::date, 'YYYY')`,
+      layoffCount: count(),
+      affectedCount: sum(layoffs.affectedCount),
+    })
+    .from(layoffs)
+    .where(eq(layoffs.status, "verified"))
+    .groupBy(sql`to_char(${layoffs.date}::date, 'YYYY')`)
+    .orderBy(desc(sql`to_char(${layoffs.date}::date, 'YYYY')`));
+
+  return rows.map((r) => ({
+    year: Number(r.year),
+    layoffCount: r.layoffCount,
+    affectedCount: Number(r.affectedCount ?? 0),
+  }));
+}
+
+export async function getTrendChartByYears(years: number[]): Promise<Record<number, MonthlyPoint[]>> {
+  if (years.length === 0) return {};
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
+  const start = `${minYear}-01-01`;
+  const end = `${maxYear}-12-31`;
+
+  const rows = await db
+    .select({
+      month: sql<string>`to_char(${layoffs.date}::date, 'YYYY-MM')`,
+      layoffCount: count(),
+      affectedCount: sum(layoffs.affectedCount),
+    })
+    .from(layoffs)
+    .where(
+      and(
+        eq(layoffs.status, "verified"),
+        gte(layoffs.date, start),
+        lte(layoffs.date, end),
+      ),
+    )
+    .groupBy(sql`to_char(${layoffs.date}::date, 'YYYY-MM')`);
+
+  const map = new Map<string, { layoffCount: number; affectedCount: number }>();
+  for (const r of rows) {
+    map.set(r.month, {
+      layoffCount: r.layoffCount,
+      affectedCount: Number(r.affectedCount ?? 0),
+    });
+  }
+
+  const result: Record<number, MonthlyPoint[]> = {};
+  for (const y of years) {
+    const months: MonthlyPoint[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const key = `${y}-${String(m).padStart(2, "0")}`;
+      const v = map.get(key);
+      months.push({
+        month: key,
+        layoffCount: v?.layoffCount ?? 0,
+        affectedCount: v?.affectedCount ?? 0,
+      });
+    }
+    result[y] = months;
+  }
+  return result;
+}
+
+// ============================================================
+// Industry chip stats (industries with layoffs, ordered by affected)
+// ============================================================
+
+export interface IndustryChipStat {
+  slug: string;
+  nameEn: string;
+  nameDe: string;
+  affected: number;
+}
+
+export async function getIndustryChipStats(): Promise<IndustryChipStat[]> {
+  const rows = await db
+    .select({
+      slug: industries.slug,
+      nameEn: industries.nameEn,
+      nameDe: industries.nameDe,
+      layoffCount: count(layoffs.id),
+      affected: sum(layoffs.affectedCount),
+    })
+    .from(layoffs)
+    .innerJoin(companies, eq(layoffs.companyId, companies.id))
+    .innerJoin(industries, eq(companies.industrySlug, industries.slug))
+    .where(eq(layoffs.status, "verified"))
+    .groupBy(industries.slug, industries.nameEn, industries.nameDe)
+    .having(sql`count(${layoffs.id}) >= 1`)
+    .orderBy(desc(sum(layoffs.affectedCount)));
+
+  return rows.map((r) => ({
+    slug: r.slug,
+    nameEn: r.nameEn,
+    nameDe: r.nameDe,
+    affected: Number(r.affected ?? 0),
+  }));
+}
+
+// ============================================================
+// Top layoffs of current year (by affectedCount)
+// ============================================================
+
+export async function getTopLayoffsOfYear(
+  year: number,
+  limit: number = 5,
+): Promise<LayoffWithCompany[]> {
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31`;
+
+  const data = await db
+    .select({
+      id: layoffs.id,
+      companyId: layoffs.companyId,
+      date: layoffs.date,
+      affectedCount: layoffs.affectedCount,
+      affectedPercentage: layoffs.affectedPercentage,
+      totalEmployeesAtTime: layoffs.totalEmployeesAtTime,
+      country: layoffs.country,
+      city: layoffs.city,
+      isShutdown: layoffs.isShutdown,
+      reason: layoffs.reason,
+      severanceWeeks: layoffs.severanceWeeks,
+      severanceDetailsEn: layoffs.severanceDetailsEn,
+      severanceDetailsDe: layoffs.severanceDetailsDe,
+      sourceUrl: layoffs.sourceUrl,
+      sourceName: layoffs.sourceName,
+      titleEn: layoffs.titleEn,
+      titleDe: layoffs.titleDe,
+      summaryEn: layoffs.summaryEn,
+      summaryDe: layoffs.summaryDe,
+      status: layoffs.status,
+      verifiedAt: layoffs.verifiedAt,
+      verifiedBy: layoffs.verifiedBy,
+      publishedToSocial: layoffs.publishedToSocial,
+      publishedToNewsletter: layoffs.publishedToNewsletter,
+      createdAt: layoffs.createdAt,
+      updatedAt: layoffs.updatedAt,
+      companyName: companies.name,
+      companySlug: companies.slug,
+      companyLogoUrl: companies.logoUrl,
+      companyIndustrySlug: companies.industrySlug,
+      companyCountryHq: companies.countryHq,
+      industryNameEn: industries.nameEn,
+      industryNameDe: industries.nameDe,
+    })
+    .from(layoffs)
+    .innerJoin(companies, eq(layoffs.companyId, companies.id))
+    .innerJoin(industries, eq(companies.industrySlug, industries.slug))
+    .where(
+      and(
+        eq(layoffs.status, "verified"),
+        gte(layoffs.date, start),
+        lte(layoffs.date, end),
+        sql`${layoffs.affectedCount} is not null`,
+      ),
+    )
+    .orderBy(desc(layoffs.affectedCount))
+    .limit(limit);
+
+  return data.map((row) => ({
+    id: row.id,
+    companyId: row.companyId,
+    date: row.date,
+    affectedCount: row.affectedCount,
+    affectedPercentage: row.affectedPercentage,
+    totalEmployeesAtTime: row.totalEmployeesAtTime,
+    country: row.country,
+    city: row.city,
+    isShutdown: row.isShutdown,
+    reason: row.reason,
+    severanceWeeks: row.severanceWeeks,
+    severanceDetailsEn: row.severanceDetailsEn,
+    severanceDetailsDe: row.severanceDetailsDe,
+    sourceUrl: row.sourceUrl,
+    sourceName: row.sourceName,
+    titleEn: row.titleEn,
+    titleDe: row.titleDe,
+    summaryEn: row.summaryEn,
+    summaryDe: row.summaryDe,
+    status: row.status,
+    verifiedAt: row.verifiedAt,
+    verifiedBy: row.verifiedBy,
+    publishedToSocial: row.publishedToSocial,
+    publishedToNewsletter: row.publishedToNewsletter,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    company: {
+      name: row.companyName,
+      slug: row.companySlug,
+      logoUrl: row.companyLogoUrl,
+      industrySlug: row.companyIndustrySlug,
+      countryHq: row.companyCountryHq,
+      industry: {
+        nameEn: row.industryNameEn,
+        nameDe: row.industryNameDe,
+      },
+    },
+  }));
 }
 
 // ============================================================

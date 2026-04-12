@@ -45,8 +45,20 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
     .join("")
     .toUpperCase();
 
+  const severityColor =
+    layoff.affectedCount == null
+      ? "#6B7280"
+      : layoff.affectedCount >= 5000
+        ? "#EF4444"
+        : layoff.affectedCount >= 1000
+          ? "#F59E0B"
+          : "#EAB308";
+
   return (
-    <div className="group relative flex gap-4 rounded-xl border border-neutral-200 bg-white p-4 transition hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700">
+    <div
+      className="group relative flex gap-4 overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 pl-5 transition hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
+      style={{ borderLeft: `4px solid ${severityColor}` }}
+    >
       {/* Card-level link (covers entire card) */}
       <Link
         href={`/layoff/${layoff.id}`}
