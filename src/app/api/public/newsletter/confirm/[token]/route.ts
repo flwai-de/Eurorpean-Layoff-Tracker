@@ -21,6 +21,7 @@ export async function GET(
       id: newsletterSubscribers.id,
       status: newsletterSubscribers.status,
       language: newsletterSubscribers.language,
+      confirmedAt: newsletterSubscribers.confirmedAt,
     })
     .from(newsletterSubscribers)
     .where(eq(newsletterSubscribers.confirmationToken, token))
@@ -35,7 +36,14 @@ export async function GET(
   const locale = sub.language === "de" ? "de" : "en";
 
   if (sub.status === "active") {
-    return NextResponse.redirect(new URL(`/${locale}?confirmed=already`, SITE_URL));
+    // Email link scanners (Outlook ATP, Gmail preview, corporate proxies)
+    // often prefetch the URL before the user clicks. Treat a just-activated
+    // row as still "success" so the real click lands on the welcome banner.
+    const justConfirmed =
+      sub.confirmedAt != null &&
+      Date.now() - sub.confirmedAt.getTime() < 5 * 60_000;
+    const flag = justConfirmed ? "success" : "already";
+    return NextResponse.redirect(new URL(`/${locale}?confirmed=${flag}`, SITE_URL));
   }
 
   if (sub.status !== "pending") {
