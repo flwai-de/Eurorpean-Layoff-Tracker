@@ -1,24 +1,23 @@
 import { Worker, type Job } from "bullmq";
+import { z } from "zod";
 import { connection } from "@/lib/queue";
 import { getAnthropic } from "@/lib/api/anthropic";
 import { db } from "@/lib/db";
-import {
-  rssArticles,
-  layoffs,
-  companies,
-} from "@/lib/db/schema";
+import { rssArticles, layoffs, companies } from "@/lib/db/schema";
 import { eq, and, sql, between } from "drizzle-orm";
 import { generateSlug } from "@/lib/utils/slug";
+import { sendTelegramAlert, formatLayoffReady } from "@/lib/telegram";
 
 // ============================================================
-// System prompt
+// System prompt — European layoff tracker with EU filter
 // ============================================================
 
-const SYSTEM_PROMPT = `Du bist ein Daten-Extraktions-Assistent für einen europäischen Layoff-Tracker.
+const SYSTEM_PROMPT = `Du bist ein Daten-Extraktions-Assistent für einen EUROPÄISCHEN Layoff-Tracker.
 
 Analysiere den folgenden Nachrichtenartikel und bestimme:
-1. Handelt es sich um einen Layoff / Stellenabbau / Massenentlassung?
-2. Wenn ja, extrahiere die folgenden Felder als JSON.
+1. Handelt es sich um einen tatsächlichen Layoff / Stellenabbau / Massenentlassung?
+2. Hat der Layoff einen klaren Bezug zu Europa? (europäisches Land, europäische Stadt, europäischer Standort betroffen)
+3. Wenn ja zu beiden, extrahiere die folgenden Felder als JSON.
 
 Antworte ausschließlich mit validem JSON, kein anderer Text.
 
@@ -30,7 +29,7 @@ Antworte ausschließlich mit validem JSON, kein anderer Text.
     "affected_count": Zahl oder null,
     "affected_percentage": Zahl oder null,
     "total_employees": Zahl oder null,
-    "country": "ISO 3166-1 Alpha-2 Code des Landes WO entlassen wird",
+    "country": "ISO 3166-1 Alpha-2 Code des EUROPÄISCHEN Landes wo entlassen wird",
     "city": "Stadt oder null",
     "is_shutdown": true/false,
     "reason": "restructuring|cost_cutting|ai_replacement|market_downturn|merger|shutdown|other",
@@ -44,52 +43,70 @@ Antworte ausschließlich mit validem JSON, kein anderer Text.
 }
 
 Regeln:
-- Nur relevant markieren bei TATSÄCHLICHEN Entlassungen — nicht bei Gerüchten, geplanten Umstrukturierungen ohne Stellenabbau, oder Einstellungsstopps.
-- "country" ist das Land wo entlassen wird, NICHT das HQ-Land der Firma.
-- Bei mehreren Ländern: das Land mit den meisten Betroffenen nehmen.
+- is_relevant = false wenn der Artikel KEINEN klaren Bezug zu Europa hat.
+  Beispiel: "Meta lays off 20% globally" → relevant nur wenn europäische Standorte explizit erwähnt werden.
+  Beispiel: "Pinterest cuts 15% of staff" ohne Erwähnung europäischer Offices → is_relevant = false mit reasoning "No European connection identified".
+- is_relevant = false bei reinen US/Asien-Layoffs ohne europäischen Bezug.
+- Nur relevant markieren bei TATSÄCHLICHEN Entlassungen — nicht bei Gerüchten,
+  geplanten Umstrukturierungen ohne Stellenabbau, oder Einstellungsstopps.
+- is_relevant = false bei Meinungsartikeln, Analysen, Rückblicken oder "Lessons Learned"-Artikeln über vergangene Layoffs.
+- "country" ist das europäische Land wo entlassen wird, NICHT das HQ-Land der Firma.
+- Bei mehreren europäischen Ländern: das Land mit den meisten Betroffenen nehmen.
 - Bei unklaren Zahlen: lieber null als raten.
-- is_relevant = false bei reinen Gewinnwarnungen, Aktienbewegungen, Analysteneinschätzungen oder Spekulationen.`;
+- is_relevant = false bei reinen Gewinnwarnungen, Aktienbewegungen,
+  Analysteneinschätzungen oder Spekulationen.
+- Europäische Länder umfassen: alle EU-Mitgliedsstaaten, UK, Schweiz, Norwegen, Island, Liechtenstein, Westbalkan, Ukraine, Moldau, Türkei.`;
 
 // ============================================================
-// Types
+// Zod schema for AI response validation
 // ============================================================
 
-interface ExtractPayload {
-  articleId: string;
-}
+const REASON_VALUES = [
+  "restructuring",
+  "cost_cutting",
+  "ai_replacement",
+  "market_downturn",
+  "merger",
+  "shutdown",
+  "other",
+] as const;
 
-interface AiResponse {
-  is_relevant: boolean;
-  reasoning: string;
-  data?: {
-    company_name: string;
-    affected_count: number | null;
-    affected_percentage: number | null;
-    total_employees: number | null;
-    country: string;
-    city: string | null;
-    is_shutdown: boolean;
-    reason: string;
-    title_en: string;
-    title_de: string;
-    summary_en: string;
-    summary_de: string;
-    severance_weeks: number | null;
-    date: string;
-  };
-}
+const AiDataSchema = z.object({
+  company_name: z.string().min(1),
+  affected_count: z.number().int().nullable(),
+  affected_percentage: z.number().nullable(),
+  total_employees: z.number().int().nullable(),
+  country: z.string().length(2),
+  city: z.string().nullable(),
+  is_shutdown: z.boolean(),
+  reason: z.enum(REASON_VALUES).or(z.string()),
+  title_en: z.string().min(1).max(200),
+  title_de: z.string().min(1).max(200),
+  summary_en: z.string().min(1),
+  summary_de: z.string().min(1),
+  severance_weeks: z.number().int().nullable(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+const AiResponseSchema = z.object({
+  is_relevant: z.boolean(),
+  reasoning: z.string(),
+  data: AiDataSchema.optional().nullable(),
+});
+
+type AiResponse = z.infer<typeof AiResponseSchema>;
 
 // ============================================================
-// JSON parsing (strips markdown fences, handles edge cases)
+// JSON parsing (strips markdown fences) + Zod validation
 // ============================================================
 
 function parseAiJson(text: string): AiResponse {
-  // Strip markdown code fences
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   }
-  return JSON.parse(cleaned) as AiResponse;
+  const raw: unknown = JSON.parse(cleaned);
+  return AiResponseSchema.parse(raw);
 }
 
 // ============================================================
@@ -100,7 +117,6 @@ async function findOrCreateCompany(
   companyName: string,
   countryCode: string,
 ): Promise<string> {
-  // Case-insensitive lookup
   const existing = await db
     .select({ id: companies.id })
     .from(companies)
@@ -111,7 +127,6 @@ async function findOrCreateCompany(
     return existing[0].id;
   }
 
-  // Create new company
   const slug = generateSlug(companyName);
   const [newCompany] = await db
     .insert(companies)
@@ -125,7 +140,6 @@ async function findOrCreateCompany(
     .onConflictDoNothing()
     .returning({ id: companies.id });
 
-  // If slug conflict, fetch existing
   if (!newCompany) {
     const bySlug = await db
       .select({ id: companies.id })
@@ -140,29 +154,27 @@ async function findOrCreateCompany(
 }
 
 // ============================================================
-// Duplicate detection
+// Duplicate detection — same company, ±7 days, status != rejected
 // ============================================================
 
 async function findDuplicateLayoff(
   companyId: string,
   date: string,
-  affectedCount: number | null,
 ): Promise<string | null> {
-  const conditions = [
-    eq(layoffs.companyId, companyId),
-    between(layoffs.date, sql`${date}::date - INTERVAL '7 days'`, sql`${date}::date + INTERVAL '7 days'`),
-  ];
-
-  if (affectedCount != null) {
-    conditions.push(
-      sql`(${layoffs.affectedCount} = ${affectedCount} OR ${layoffs.affectedCount} IS NULL)`,
-    );
-  }
-
   const existing = await db
     .select({ id: layoffs.id })
     .from(layoffs)
-    .where(and(...conditions))
+    .where(
+      and(
+        eq(layoffs.companyId, companyId),
+        between(
+          layoffs.date,
+          sql`${date}::date - INTERVAL '7 days'`,
+          sql`${date}::date + INTERVAL '7 days'`,
+        ),
+        sql`${layoffs.status} != 'rejected'`,
+      ),
+    )
     .limit(1);
 
   return existing.length > 0 ? existing[0].id : null;
@@ -172,15 +184,28 @@ async function findDuplicateLayoff(
 // Main handler
 // ============================================================
 
-const VALID_REASONS = [
-  "restructuring", "cost_cutting", "ai_replacement",
-  "market_downturn", "merger", "shutdown", "other",
-] as const;
+interface ExtractPayload {
+  articleId: string;
+}
 
 async function handleExtract(job: Job<ExtractPayload>) {
   const { articleId } = job.data;
 
-  // Load article with feed info
+  // Graceful degradation when API key missing — log + mark processed, skip.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error(
+      "[ai-extract] ANTHROPIC_API_KEY not set — cannot enrich articles, skipping",
+    );
+    await db
+      .update(rssArticles)
+      .set({
+        processedAt: new Date(),
+        relevanceReasoning: "Skipped: ANTHROPIC_API_KEY not configured",
+      })
+      .where(eq(rssArticles.id, articleId));
+    return { skipped: true, reason: "ANTHROPIC_API_KEY missing" };
+  }
+
   const article = await db.query.rssArticles.findFirst({
     where: eq(rssArticles.id, articleId),
     with: { feed: true },
@@ -189,13 +214,11 @@ async function handleExtract(job: Job<ExtractPayload>) {
   if (!article) {
     return { skipped: true, reason: "Article not found" };
   }
-
   if (article.processedAt) {
     return { skipped: true, reason: "Already processed" };
   }
 
-  // Call Claude Haiku
-  const userMessage = `Titel: ${article.title}\n\nInhalt:\n${article.rawContent ?? article.title}`;
+  const userMessage = `Titel: ${article.title}\n\nQuelle: ${article.url}\n\nInhalt:\n${article.rawContent ?? article.title}`;
 
   let aiResponse: AiResponse;
   try {
@@ -213,74 +236,77 @@ async function handleExtract(job: Job<ExtractPayload>) {
 
     aiResponse = parseAiJson(textBlock.text);
   } catch (error) {
-    // JSON parse failure — mark as processed, don't retry
-    if (error instanceof SyntaxError) {
-      console.error(`[ai-extract] Invalid JSON for article "${article.title}":`, error.message);
+    const isInvalidJson =
+      error instanceof SyntaxError || error instanceof z.ZodError;
+    if (isInvalidJson) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[ai-extract] Invalid AI response for article "${article.title}": ${msg}`,
+      );
       await db
         .update(rssArticles)
-        .set({ processedAt: new Date() })
+        .set({
+          isRelevant: false,
+          relevanceReasoning: `Invalid AI response: ${msg.slice(0, 200)}`,
+          processedAt: new Date(),
+        })
         .where(eq(rssArticles.id, articleId));
-      return { articleId, error: "Invalid JSON from AI" };
+      return { articleId, error: "Invalid AI response" };
     }
-    // API errors (429, 500) — let BullMQ retry
+    // API-side failures (429, 500) — let BullMQ retry
     throw error;
   }
 
-  // Update article with relevance info
-  await db
-    .update(rssArticles)
-    .set({
-      isRelevant: aiResponse.is_relevant,
-      relevanceReasoning: aiResponse.reasoning,
-      processedAt: new Date(),
-    })
-    .where(eq(rssArticles.id, articleId));
-
-  // If not relevant, we're done
+  // Not relevant (no European connection, speculation, duplicate topic, etc.)
   if (!aiResponse.is_relevant || !aiResponse.data) {
+    await db
+      .update(rssArticles)
+      .set({
+        isRelevant: false,
+        relevanceReasoning: aiResponse.reasoning,
+        processedAt: new Date(),
+      })
+      .where(eq(rssArticles.id, articleId));
     return { articleId, relevant: false, reasoning: aiResponse.reasoning };
   }
 
   const data = aiResponse.data;
 
-  // Find or create company
-  const companyId = await findOrCreateCompany(
-    data.company_name,
-    data.country ?? "DE",
-  );
+  const companyId = await findOrCreateCompany(data.company_name, data.country);
 
-  // Duplicate check
-  const duplicateId = await findDuplicateLayoff(
-    companyId,
-    data.date,
-    data.affected_count,
-  );
-
+  const duplicateId = await findDuplicateLayoff(companyId, data.date);
   if (duplicateId) {
-    // Link article to existing layoff
     await db
       .update(rssArticles)
-      .set({ layoffId: duplicateId })
+      .set({
+        isRelevant: false,
+        relevanceReasoning: "Duplicate of existing layoff",
+        layoffId: duplicateId,
+        processedAt: new Date(),
+      })
       .where(eq(rssArticles.id, articleId));
-
-    return { articleId, relevant: true, duplicate: true, layoffId: duplicateId };
+    return {
+      articleId,
+      relevant: true,
+      duplicate: true,
+      layoffId: duplicateId,
+    };
   }
 
-  // Validate reason
-  const reason = VALID_REASONS.includes(data.reason as typeof VALID_REASONS[number])
-    ? (data.reason as typeof VALID_REASONS[number])
+  const reason = (REASON_VALUES as readonly string[]).includes(data.reason)
+    ? (data.reason as (typeof REASON_VALUES)[number])
     : null;
 
-  // Create new layoff — ALWAYS unverified
   const [newLayoff] = await db
     .insert(layoffs)
     .values({
       companyId,
       date: data.date,
       affectedCount: data.affected_count,
-      affectedPercentage: data.affected_percentage != null
-        ? String(data.affected_percentage)
-        : null,
+      affectedPercentage:
+        data.affected_percentage != null
+          ? String(data.affected_percentage)
+          : null,
       totalEmployeesAtTime: data.total_employees,
       country: data.country,
       city: data.city,
@@ -297,17 +323,37 @@ async function handleExtract(job: Job<ExtractPayload>) {
     })
     .returning({ id: layoffs.id });
 
-  // Link article to new layoff
   await db
     .update(rssArticles)
-    .set({ layoffId: newLayoff.id })
+    .set({
+      isRelevant: true,
+      relevanceReasoning: aiResponse.reasoning,
+      layoffId: newLayoff.id,
+      processedAt: new Date(),
+    })
     .where(eq(rssArticles.id, articleId));
 
-  console.log(
-    `[ai-extract] Created unverified layoff for "${data.company_name}" (${data.affected_count ?? "?"} affected)`,
+  // Second-stage Telegram alert: LLM-verified + European
+  await sendTelegramAlert(
+    formatLayoffReady({
+      layoffId: newLayoff.id,
+      companyName: data.company_name,
+      affectedCount: data.affected_count,
+      country: data.country,
+      reason,
+    }),
   );
 
-  return { articleId, relevant: true, duplicate: false, layoffId: newLayoff.id };
+  console.log(
+    `[ai-extract] Created unverified layoff for "${data.company_name}" (${data.affected_count ?? "?"} affected in ${data.country})`,
+  );
+
+  return {
+    articleId,
+    relevant: true,
+    duplicate: false,
+    layoffId: newLayoff.id,
+  };
 }
 
 // ============================================================

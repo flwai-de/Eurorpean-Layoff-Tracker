@@ -69,3 +69,24 @@ export function formatLayoffAlert(params: {
     `<a href="https://dimissio.eu/admin/layoffs/new">→ Im Admin eintragen</a>`,
   ].join("\n");
 }
+
+export function formatLayoffReady(params: {
+  layoffId: string;
+  companyName: string;
+  affectedCount: number | null;
+  country: string;
+  reason: string | null;
+}): string {
+  const { layoffId, companyName, affectedCount, country, reason } = params;
+  const affectedStr =
+    affectedCount != null ? `${affectedCount.toLocaleString("de-DE")} Stellen` : "—";
+  return [
+    `✅ <b>Layoff vorbereitet</b>`,
+    "",
+    `<b>${escapeHtml(companyName)}</b> — ${escapeHtml(affectedStr)}`,
+    `Land: ${escapeHtml(country)}`,
+    `Grund: ${escapeHtml(reason ?? "—")}`,
+    "",
+    `<a href="https://dimissio.eu/admin/layoffs/${encodeURIComponent(layoffId)}/edit">→ Im Admin prüfen</a>`,
+  ].join("\n");
+}

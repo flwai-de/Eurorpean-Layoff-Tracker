@@ -81,7 +81,12 @@ async function handleFetchFeed(job: Job<FetchFeedPayload>) {
         await aiExtractQueue.add(
           "extract",
           { articleId: newArticle.id },
-          { removeOnComplete: 100, removeOnFail: 200 },
+          {
+            attempts: 2,
+            backoff: { type: "exponential", delay: 10_000 },
+            removeOnComplete: 100,
+            removeOnFail: 200,
+          },
         );
       }
 
