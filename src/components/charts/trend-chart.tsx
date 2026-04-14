@@ -174,13 +174,20 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
+              tickFormatter={(v: number) =>
+                v >= 1_000_000
+                  ? `${(v / 1_000_000).toFixed(1)}M`
+                  : v >= 1_000
+                    ? `${Math.round(v / 1_000)}K`
+                    : String(v)
+              }
             />
             <Tooltip
               content={<CustomTooltip />}
               cursor={{ fill: "rgba(115,115,115,0.08)" }}
             />
             <Bar
-              dataKey="layoffCount"
+              dataKey="affectedCount"
               fill="#4DB8A0"
               fillOpacity={0.55}
               radius={[3, 3, 0, 0]}
