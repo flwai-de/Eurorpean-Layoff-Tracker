@@ -16,6 +16,22 @@ services:
     networks:
       - dimissio
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dimissio
+
   db:
     image: postgres:16-alpine
     volumes:
