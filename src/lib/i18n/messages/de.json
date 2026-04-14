@@ -103,6 +103,7 @@
     "metaTitle": "Layoffs in {country} | Dimissio"
   },
   "industryGroups": {
+    "all": "Alle",
     "tech": "Tech",
     "automotive": "Automotive",
     "industry": "Industrie",

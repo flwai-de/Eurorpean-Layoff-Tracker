@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
-import { getIndustriesWithCounts } from "@/lib/queries/public";
+import { getGroupsWithCounts } from "@/lib/queries/public";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -21,20 +21,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function IndustriesPage() {
-  const industries = await getIndustriesWithCounts();
-
-  return <IndustriesContent industries={industries} />;
+export default async function IndustriesPage({ params }: Props) {
+  const { locale } = await params;
+  const groups = await getGroupsWithCounts();
+  return <IndustriesContent groups={groups} locale={locale as "de" | "en"} />;
 }
 
 function IndustriesContent({
-  industries,
+  groups,
+  locale,
 }: {
-  industries: Awaited<ReturnType<typeof getIndustriesWithCounts>>;
+  groups: Awaited<ReturnType<typeof getGroupsWithCounts>>;
+  locale: "de" | "en";
 }) {
-  const locale = useLocale() as "de" | "en";
   const t = useTranslations("industry");
   const tLayoff = useTranslations("layoff");
+  const tGroups = useTranslations("industryGroups");
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
@@ -46,19 +48,22 @@ function IndustriesContent({
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {industries.map((industry) => {
-          const name = locale === "de" ? industry.nameDe : industry.nameEn;
+        {groups.map((group) => {
+          let label: string;
+          try {
+            label = tGroups(group.key);
+          } catch {
+            label = locale === "de" ? group.labelDe : group.labelEn;
+          }
           return (
             <Link
-              key={industry.slug}
-              href={`/industry/${industry.slug}`}
+              key={group.key}
+              href={`/industry/${group.key}`}
               className="rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-neutral-300 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
             >
-              <p className="font-semibold text-neutral-900 dark:text-white">
-                {name}
-              </p>
+              <p className="font-semibold text-neutral-900 dark:text-white">{label}</p>
               <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                {t("layoffCount", { count: industry.layoffCount })}
+                {t("layoffCount", { count: group.layoffCount })}
               </p>
             </Link>
           );

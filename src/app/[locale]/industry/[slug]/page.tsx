@@ -5,9 +5,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { db } from "@/lib/db";
 import { industries } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
-import { getLayoffsByIndustry } from "@/lib/queries/public";
+import { eq, asc, inArray } from "drizzle-orm";
+import { getLayoffsByIndustry, getLayoffsByGroup } from "@/lib/queries/public";
 import LayoffFeed from "@/components/layoffs/layoff-feed";
+import {
+  getGroupByKey,
+  getGroupLabel,
+  isGroupKey,
+} from "@/lib/utils/industry-groups";
 
 const PER_PAGE = 20;
 
@@ -18,17 +23,21 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const industry = await db.query.industries.findFirst({
-    where: eq(industries.slug, slug),
-  });
-  if (!industry) return {};
-
   const t = await getTranslations({ locale, namespace: "industry" });
-  const name = locale === "de" ? industry.nameDe : industry.nameEn;
-  const title = t("metaTitle", { industry: name });
+
+  let name: string | null = null;
+  if (isGroupKey(slug)) {
+    name = getGroupLabel(slug, locale as "de" | "en");
+  } else {
+    const industry = await db.query.industries.findFirst({
+      where: eq(industries.slug, slug),
+    });
+    if (industry) name = locale === "de" ? industry.nameDe : industry.nameEn;
+  }
+  if (!name) return {};
 
   return {
-    title,
+    title: t("metaTitle", { industry: name }),
     alternates: {
       languages: { de: `/de/industry/${slug}`, en: `/en/industry/${slug}`, "x-default": `/en/industry/${slug}` },
     },
@@ -39,6 +48,33 @@ export default async function IndustryPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
+
+  // Group-key route: /industry/tech, /industry/automotive (group superset), etc.
+  if (isGroupKey(slug)) {
+    const group = getGroupByKey(slug)!;
+    const groupResult = await getLayoffsByGroup(slug, PER_PAGE, (page - 1) * PER_PAGE);
+    const totalAffected = groupResult.data.reduce(
+      (sum, l) => sum + (l.affectedCount ?? 0),
+      0,
+    );
+    const memberIndustries = await db
+      .select()
+      .from(industries)
+      .where(inArray(industries.slug, group.slugs))
+      .orderBy(asc(industries.sortOrder));
+    return (
+      <GroupContent
+        groupKey={slug}
+        labelDe={group.labelDe}
+        labelEn={group.labelEn}
+        memberIndustries={memberIndustries}
+        layoffs={groupResult.data}
+        total={groupResult.total}
+        totalAffected={totalAffected}
+        page={page}
+      />
+    );
+  }
 
   const industry = await db.query.industries.findFirst({
     where: eq(industries.slug, slug),
@@ -151,6 +187,81 @@ function IndustryContent({
       </div>
 
       {/* Back */}
+      <div className="mt-8">
+        <Link href="/" className="text-sm text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+          &larr; {tLayoff("backToOverview")}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function GroupContent({
+  groupKey,
+  labelDe,
+  labelEn,
+  memberIndustries,
+  layoffs,
+  total,
+  totalAffected,
+  page,
+}: {
+  groupKey: string;
+  labelDe: string;
+  labelEn: string;
+  memberIndustries: (typeof industries.$inferSelect)[];
+  layoffs: Awaited<ReturnType<typeof getLayoffsByGroup>>["data"];
+  total: number;
+  totalAffected: number;
+  page: number;
+}) {
+  const locale = useLocale() as "de" | "en";
+  const t = useTranslations("industry");
+  const tLayoff = useTranslations("layoff");
+  const tGroups = useTranslations("industryGroups");
+  let label: string;
+  try {
+    label = tGroups(groupKey);
+  } catch {
+    label = locale === "de" ? labelDe : labelEn;
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-6 py-10">
+      <h1 className="text-2xl font-bold text-neutral-900 dark:text-white sm:text-3xl">
+        {t("heading", { industry: label })}
+      </h1>
+
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <span>{t("layoffCount", { count: total })}</span>
+        {totalAffected > 0 && (
+          <span>{t("totalAffected", { count: totalAffected.toLocaleString("de-DE") })}</span>
+        )}
+      </div>
+
+      {memberIndustries.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            {t("subIndustries")}
+          </h2>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {memberIndustries.map((child) => (
+              <Link
+                key={child.slug}
+                href={`/industry/${child.slug}`}
+                className="rounded-full border border-neutral-200 px-3 py-1 text-sm text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                {locale === "de" ? child.nameDe : child.nameEn}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8">
+        <LayoffFeed layoffs={layoffs} total={total} page={page} perPage={PER_PAGE} />
+      </div>
+
       <div className="mt-8">
         <Link href="/" className="text-sm text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
           &larr; {tLayoff("backToOverview")}

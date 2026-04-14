@@ -10,7 +10,13 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, sql, desc, asc, gte, lte, count, sum, inArray, isNull } from "drizzle-orm";
 import { cache } from "@/lib/utils/cache";
-import { INDUSTRY_GROUPS, OTHER_GROUP, getGroupForSlug } from "@/lib/utils/industry-groups";
+import {
+  INDUSTRY_GROUPS,
+  OTHER_GROUP,
+  ALL_GROUPS,
+  getGroupForSlug,
+  getSlugsForGroup,
+} from "@/lib/utils/industry-groups";
 
 // ============================================================
 // Types
@@ -867,4 +873,161 @@ export async function getIndustriesWithCounts(): Promise<IndustryWithCount[]> {
   }
 
   return result;
+}
+
+// ============================================================
+// j) getLayoffsByGroup — fetch layoffs for an INDUSTRY_GROUP key
+// ============================================================
+
+export async function getLayoffsByGroup(
+  groupKey: string,
+  limit: number = 20,
+  offset: number = 0,
+): Promise<{ data: LayoffWithCompany[]; total: number }> {
+  const slugs = getSlugsForGroup(groupKey);
+  if (slugs.length === 0) return { data: [], total: 0 };
+
+  const where = and(
+    eq(layoffs.status, "verified"),
+    inArray(companies.industrySlug, slugs),
+  );
+
+  const [data, totalResult] = await Promise.all([
+    db
+      .select({
+        id: layoffs.id,
+        companyId: layoffs.companyId,
+        date: layoffs.date,
+        affectedCount: layoffs.affectedCount,
+        affectedPercentage: layoffs.affectedPercentage,
+        totalEmployeesAtTime: layoffs.totalEmployeesAtTime,
+        country: layoffs.country,
+        city: layoffs.city,
+        isShutdown: layoffs.isShutdown,
+        reason: layoffs.reason,
+        severanceWeeks: layoffs.severanceWeeks,
+        severanceDetailsEn: layoffs.severanceDetailsEn,
+        severanceDetailsDe: layoffs.severanceDetailsDe,
+        sourceUrl: layoffs.sourceUrl,
+        sourceName: layoffs.sourceName,
+        titleEn: layoffs.titleEn,
+        titleDe: layoffs.titleDe,
+        summaryEn: layoffs.summaryEn,
+        summaryDe: layoffs.summaryDe,
+        status: layoffs.status,
+        verifiedAt: layoffs.verifiedAt,
+        verifiedBy: layoffs.verifiedBy,
+        publishedToSocial: layoffs.publishedToSocial,
+        publishedToNewsletter: layoffs.publishedToNewsletter,
+        createdAt: layoffs.createdAt,
+        updatedAt: layoffs.updatedAt,
+        companyName: companies.name,
+        companySlug: companies.slug,
+        companyLogoUrl: companies.logoUrl,
+        companyIndustrySlug: companies.industrySlug,
+        companyCountryHq: companies.countryHq,
+        industryNameEn: industries.nameEn,
+        industryNameDe: industries.nameDe,
+      })
+      .from(layoffs)
+      .innerJoin(companies, eq(layoffs.companyId, companies.id))
+      .innerJoin(industries, eq(companies.industrySlug, industries.slug))
+      .where(where)
+      .orderBy(desc(layoffs.date))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: count() })
+      .from(layoffs)
+      .innerJoin(companies, eq(layoffs.companyId, companies.id))
+      .where(where),
+  ]);
+
+  return {
+    data: data.map((row) => ({
+      id: row.id,
+      companyId: row.companyId,
+      date: row.date,
+      affectedCount: row.affectedCount,
+      affectedPercentage: row.affectedPercentage,
+      totalEmployeesAtTime: row.totalEmployeesAtTime,
+      country: row.country,
+      city: row.city,
+      isShutdown: row.isShutdown,
+      reason: row.reason,
+      severanceWeeks: row.severanceWeeks,
+      severanceDetailsEn: row.severanceDetailsEn,
+      severanceDetailsDe: row.severanceDetailsDe,
+      sourceUrl: row.sourceUrl,
+      sourceName: row.sourceName,
+      titleEn: row.titleEn,
+      titleDe: row.titleDe,
+      summaryEn: row.summaryEn,
+      summaryDe: row.summaryDe,
+      status: row.status,
+      verifiedAt: row.verifiedAt,
+      verifiedBy: row.verifiedBy,
+      publishedToSocial: row.publishedToSocial,
+      publishedToNewsletter: row.publishedToNewsletter,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      company: {
+        name: row.companyName,
+        slug: row.companySlug,
+        logoUrl: row.companyLogoUrl,
+        industrySlug: row.companyIndustrySlug,
+        countryHq: row.companyCountryHq,
+        industry: {
+          nameEn: row.industryNameEn,
+          nameDe: row.industryNameDe,
+        },
+      },
+    })),
+    total: totalResult[0]?.total ?? 0,
+  };
+}
+
+// ============================================================
+// k) getGroupsWithCounts — aggregated counts per INDUSTRY_GROUP
+// ============================================================
+
+export interface GroupWithCount {
+  key: string;
+  labelEn: string;
+  labelDe: string;
+  layoffCount: number;
+  totalAffected: number;
+}
+
+export async function getGroupsWithCounts(): Promise<GroupWithCount[]> {
+  const rows = await db
+    .select({
+      slug: companies.industrySlug,
+      layoffCount: count(layoffs.id),
+      affected: sum(layoffs.affectedCount),
+    })
+    .from(layoffs)
+    .innerJoin(companies, eq(layoffs.companyId, companies.id))
+    .where(eq(layoffs.status, "verified"))
+    .groupBy(companies.industrySlug);
+
+  const agg = new Map<string, { layoffCount: number; totalAffected: number }>();
+  for (const r of rows) {
+    const groupKey = getGroupForSlug(r.slug) ?? OTHER_GROUP.key;
+    const cur = agg.get(groupKey) ?? { layoffCount: 0, totalAffected: 0 };
+    cur.layoffCount += r.layoffCount;
+    cur.totalAffected += Number(r.affected ?? 0);
+    agg.set(groupKey, cur);
+  }
+
+  return ALL_GROUPS.map((g) => {
+    const stat = agg.get(g.key) ?? { layoffCount: 0, totalAffected: 0 };
+    return {
+      key: g.key,
+      labelEn: g.labelEn,
+      labelDe: g.labelDe,
+      layoffCount: stat.layoffCount,
+      totalAffected: stat.totalAffected,
+    };
+  });
 }

@@ -36,6 +36,23 @@ export function getGroupByKey(key: string): IndustryGroup | undefined {
   return INDUSTRY_GROUPS.find((g) => g.key === key);
 }
 
+export function getSlugsForGroup(groupKey: string): string[] {
+  const group = getGroupByKey(groupKey);
+  return group ? group.slugs : [];
+}
+
+export function getGroupLabel(groupKey: string, locale: "de" | "en"): string {
+  const group = getGroupByKey(groupKey);
+  if (!group) return groupKey;
+  return locale === "de" ? group.labelDe : group.labelEn;
+}
+
+export function isGroupKey(value: string): boolean {
+  return getGroupByKey(value) !== undefined;
+}
+
+export const ALL_GROUPS: IndustryGroup[] = [...INDUSTRY_GROUPS, OTHER_GROUP];
+
 export function resolveIndustryFilter(value: string | undefined): {
   slug?: string;
   slugs?: string[];
