@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
   ResponsiveContainer,
   type TooltipProps,
 } from "recharts";
@@ -54,12 +55,20 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   if (!entry) return null;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 text-[12px] shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-      <p className="font-medium text-neutral-900 dark:text-white">{label}</p>
-      <p className="text-neutral-500 dark:text-neutral-400">
+    <div
+      className="rounded-lg border p-3 text-[12px] shadow-lg"
+      style={{
+        backgroundColor: "var(--bg-elevated)",
+        borderColor: "var(--border-default)",
+      }}
+    >
+      <p className="font-medium" style={{ color: "var(--text-primary)" }}>
+        {label}
+      </p>
+      <p style={{ color: "var(--text-secondary)" }}>
         Layoffs: {entry.layoffCount}
       </p>
-      <p className="text-neutral-500 dark:text-neutral-400">
+      <p style={{ color: "var(--text-secondary)" }}>
         Affected: {entry.affectedCount.toLocaleString()}
       </p>
     </div>
@@ -90,7 +99,10 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
 
   return (
     <section className="mx-auto max-w-6xl px-6 pt-6 pb-12">
-      <p className="mb-4 text-[10px] font-medium uppercase tracking-[1.5px] text-neutral-500 dark:text-neutral-500">
+      <p
+        className="mb-4 text-[10px] font-medium uppercase tracking-[1.5px]"
+        style={{ color: "var(--text-muted)" }}
+      >
         {t("chartTitle", { year: activeYear })}
       </p>
 
@@ -103,26 +115,34 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
               <button
                 key={y}
                 onClick={() => setActiveYear(y)}
-                className={`rounded-lg px-4 py-2 text-left text-[12px] font-medium transition ${
+                className="rounded-lg px-4 py-2 text-left text-[12px] font-medium transition"
+                style={
                   active
-                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-                }`}
+                    ? {
+                        backgroundColor: "var(--tab-active-bg)",
+                        color: "var(--tab-active-fg)",
+                      }
+                    : { color: "var(--text-muted)" }
+                }
               >
                 <span className="block">{y}</span>
                 {s ? (
                   <span
-                    className={`block text-[10px] font-normal ${
+                    className="block text-[10px] font-normal"
+                    style={
                       active
-                        ? "text-neutral-500 dark:text-neutral-500"
-                        : "text-neutral-400 dark:text-neutral-500"
-                    }`}
+                        ? { color: "var(--text-muted)", opacity: 0.7 }
+                        : { color: "var(--text-muted)" }
+                    }
                   >
                     {s.layoffCount.toLocaleString(nf)} {t("layoffsWord")} &middot;{" "}
                     {s.affectedCount.toLocaleString(nf)} {t("affectedWord")}
                   </span>
                 ) : (
-                  <span className="block text-[10px] font-normal text-neutral-500">
+                  <span
+                    className="block text-[10px] font-normal"
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {t("noData")}
                   </span>
                 )}
@@ -132,17 +152,25 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
         </div>
       )}
 
-      <div className="rounded-xl border border-neutral-200 p-6 dark:border-neutral-800/50">
+      <div
+        className="rounded-xl border p-6"
+        style={{ borderColor: "var(--chart-border)" }}
+      >
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>
+            <CartesianGrid
+              vertical={false}
+              stroke="var(--chart-grid)"
+              strokeDasharray="0"
+            />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#737373", fontSize: 10 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#737373", fontSize: 10 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
@@ -153,8 +181,8 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
             />
             <Bar
               dataKey="layoffCount"
-              fill="currentColor"
-              className="text-neutral-900/15 dark:text-white/20"
+              fill="#4DB8A0"
+              fillOpacity={0.55}
               radius={[3, 3, 0, 0]}
             />
           </BarChart>

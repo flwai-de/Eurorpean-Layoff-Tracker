@@ -22,13 +22,17 @@ function TrendIndicator({
   prevYear: number;
 }) {
   if (pct == null) {
-    return <p className="mt-2 h-[15px] text-[11px]">&nbsp;</p>;
+    return <p className="mt-2.5 h-[15px] text-[11px]">&nbsp;</p>;
   }
   const up = pct >= 0;
   const arrow = up ? "\u2191" : "\u2193";
-  const color = up ? "text-red-500" : "text-emerald-500";
+  // More layoffs y/y (up) = bad → danger; fewer (down) = good → success.
+  const colorVar = up ? "var(--accent-danger)" : "var(--accent-success)";
   return (
-    <p className={`mt-2 text-[11px] font-medium ${color}`}>
+    <p
+      className="mt-2.5 text-[11px] font-medium"
+      style={{ color: colorVar }}
+    >
       {arrow} {Math.abs(pct)}% vs. {prevYear}
     </p>
   );
@@ -70,23 +74,36 @@ export default function HeroStats({ stats }: HeroStatsProps) {
 
   return (
     <section className="mx-auto max-w-6xl px-6 pt-12 pb-10">
-      <h1 className="mx-auto text-center text-[32px] font-medium leading-[1.1] tracking-[-1.5px] text-neutral-900 dark:text-white sm:text-[40px]">
+      <h1
+        className="mx-auto text-center text-[32px] font-medium leading-[1.1] tracking-[-1.5px] sm:text-[40px]"
+        style={{ color: "var(--text-primary)" }}
+      >
         {t("heroHeadline")}
       </h1>
-      <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
+      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="flex min-h-[130px] flex-col bg-white p-5 dark:bg-neutral-900"
+            className="flex min-h-[130px] flex-col items-center rounded-xl p-5 text-center"
+            style={{ backgroundColor: "var(--bg-surface)" }}
           >
-            <p className="text-[28px] font-medium tabular-nums leading-none tracking-[-1px] text-neutral-900 dark:text-white">
+            <p
+              className="text-[30px] font-medium leading-none tracking-[-1px] tabular-nums"
+              style={{ color: "var(--text-primary)" }}
+            >
               {card.value}
             </p>
-            <p className="mt-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+            <p
+              className="mt-2 text-[11px]"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {card.label}
             </p>
             {card.sub ? (
-              <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-500">
+              <p
+                className="mt-0.5 text-[10px]"
+                style={{ color: "var(--text-muted)" }}
+              >
                 {card.sub}
               </p>
             ) : null}

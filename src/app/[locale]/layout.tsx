@@ -86,7 +86,7 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className="bg-white text-neutral-900 dark:bg-neutral-950 dark:text-white">
+      <body>
         <NextIntlClientProvider messages={messages}>
           <Header />
           <main className="min-h-screen">{children}</main>

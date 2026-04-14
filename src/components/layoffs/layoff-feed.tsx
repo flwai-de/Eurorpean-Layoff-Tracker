@@ -16,8 +16,11 @@ export default function LayoffFeed({ layoffs, total, page, perPage }: LayoffFeed
 
   if (layoffs.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center border-y border-neutral-200 dark:border-neutral-800/50">
-        <p className="text-[13px] text-neutral-400 dark:text-neutral-500">
+      <div
+        className="flex h-40 items-center justify-center border-y"
+        style={{ borderColor: "var(--border-subtle)" }}
+      >
+        <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>
           {t("noLayoffs")}
         </p>
       </div>
@@ -26,9 +29,17 @@ export default function LayoffFeed({ layoffs, total, page, perPage }: LayoffFeed
 
   return (
     <div>
-      <div className="border-t border-neutral-200 dark:border-neutral-800/50">
-        {layoffs.map((layoff) => (
-          <LayoffCard key={layoff.id} layoff={layoff} />
+      <div>
+        {layoffs.map((layoff, i) => (
+          <div key={layoff.id}>
+            {i > 0 && (
+              <div
+                className="mx-2.5 h-px"
+                style={{ backgroundColor: "var(--border-subtle)" }}
+              />
+            )}
+            <LayoffCard layoff={layoff} />
+          </div>
         ))}
       </div>
 
@@ -38,27 +49,38 @@ export default function LayoffFeed({ layoffs, total, page, perPage }: LayoffFeed
           {page > 1 ? (
             <Link
               href={`/?page=${page - 1}`}
-              className="text-[12px] text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              className="nav-link text-[12px] transition-colors"
+              style={{ color: "var(--text-secondary)" }}
             >
               {t("prevPage")}
             </Link>
           ) : (
-            <span className="text-[12px] text-neutral-300 dark:text-neutral-700">
+            <span
+              className="text-[12px]"
+              style={{ color: "var(--text-muted)", opacity: 0.5 }}
+            >
               {t("prevPage")}
             </span>
           )}
-          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+          <span
+            className="text-[11px]"
+            style={{ color: "var(--text-muted)" }}
+          >
             {t("page", { current: page, total: totalPages })}
           </span>
           {page < totalPages ? (
             <Link
               href={`/?page=${page + 1}`}
-              className="text-[12px] text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              className="nav-link text-[12px] transition-colors"
+              style={{ color: "var(--text-secondary)" }}
             >
               {t("nextPage")}
             </Link>
           ) : (
-            <span className="text-[12px] text-neutral-300 dark:text-neutral-700">
+            <span
+              className="text-[12px]"
+              style={{ color: "var(--text-muted)", opacity: 0.5 }}
+            >
               {t("nextPage")}
             </span>
           )}

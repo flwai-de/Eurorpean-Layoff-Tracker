@@ -13,25 +13,27 @@ export default function LocaleSwitcher() {
   }
 
   return (
-    <div className="flex items-center gap-1 text-sm">
+    <div className="flex items-center gap-1 text-[12px]">
       <button
         onClick={() => switchLocale("de")}
-        className={`px-1.5 py-0.5 transition ${
-          locale === "de"
-            ? "font-bold text-neutral-900 dark:text-white"
-            : "text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
-        }`}
+        className="nav-link px-1.5 py-0.5 transition-colors"
+        style={{
+          color:
+            locale === "de" ? "var(--text-primary)" : "var(--text-muted)",
+          fontWeight: locale === "de" ? 500 : 400,
+        }}
       >
         DE
       </button>
-      <span className="text-neutral-300 dark:text-neutral-600">|</span>
+      <span style={{ color: "var(--text-muted)", opacity: 0.5 }}>|</span>
       <button
         onClick={() => switchLocale("en")}
-        className={`px-1.5 py-0.5 transition ${
-          locale === "en"
-            ? "font-bold text-neutral-900 dark:text-white"
-            : "text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
-        }`}
+        className="nav-link px-1.5 py-0.5 transition-colors"
+        style={{
+          color:
+            locale === "en" ? "var(--text-primary)" : "var(--text-muted)",
+          fontWeight: locale === "en" ? 500 : 400,
+        }}
       >
         EN
       </button>

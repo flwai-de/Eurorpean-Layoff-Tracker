@@ -8,6 +8,72 @@
       "Segoe UI", sans-serif;
     --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
       monospace;
+
+    --bg-base: #ffffff;
+    --bg-surface: #f5f5f5;
+    --bg-surface-hover: #f0f0f0;
+    --bg-row-hover: #f9f9f9;
+    --bg-elevated: #ffffff;
+
+    --text-primary: #171717;
+    --text-secondary: #737373;
+    --text-muted: #a3a3a3;
+
+    --border-default: #e5e5e5;
+    --border-subtle: rgba(0, 0, 0, 0.06);
+
+    --accent-bar: #4DB8A0;
+    --accent-bar-opacity: 0.45;
+    --accent-danger: #A32D2D;
+    --accent-success: #0F6E56;
+
+    --pill-active-bg: #171717;
+    --pill-active-fg: #fafafa;
+    --pill-inactive-border: #e5e5e5;
+    --pill-inactive-text: #737373;
+
+    --tab-active-bg: #171717;
+    --tab-active-fg: #fafafa;
+
+    --initial-bg: #f0f0f0;
+    --initial-text: #a3a3a3;
+
+    --chart-border: #e5e5e5;
+    --chart-grid: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
+    --bg-base: #0a0a0a;
+    --bg-surface: #171717;
+    --bg-surface-hover: #1f1f1f;
+    --bg-row-hover: #1a1a1a;
+    --bg-elevated: #171717;
+
+    --text-primary: #fafafa;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
+
+    --border-default: #262626;
+    --border-subtle: rgba(255, 255, 255, 0.06);
+
+    --accent-bar: #4DB8A0;
+    --accent-bar-opacity: 0.55;
+    --accent-danger: #E24B4A;
+    --accent-success: #1D9E75;
+
+    --pill-active-bg: #fafafa;
+    --pill-active-fg: #171717;
+    --pill-inactive-border: #262626;
+    --pill-inactive-text: #737373;
+
+    --tab-active-bg: #fafafa;
+    --tab-active-fg: #171717;
+
+    --initial-bg: #262626;
+    --initial-text: #737373;
+
+    --chart-border: #262626;
+    --chart-grid: rgba(255, 255, 255, 0.04);
   }
 
   html {
@@ -15,8 +81,39 @@
   }
 
   body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+}
+
+@layer components {
+  .select-filter:hover {
+    border-color: var(--text-muted);
+  }
+
+  .pill-inactive:hover {
+    border-color: var(--text-muted);
+    color: var(--text-secondary);
+  }
+
+  .row-link {
+    transition: background-color 150ms ease, transform 150ms ease;
+  }
+  .row-link:hover {
+    background-color: var(--bg-row-hover);
+  }
+  .row-link:active {
+    transform: scale(0.995);
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+  }
+
+  .footer-link:hover {
+    color: var(--text-secondary);
   }
 }

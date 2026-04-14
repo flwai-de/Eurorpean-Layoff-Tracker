@@ -131,7 +131,10 @@ export default async function HomePage({
 function FeedTitle() {
   const t = useTranslations("home");
   return (
-    <p className="text-[10px] font-medium uppercase tracking-[1.5px] text-neutral-500 dark:text-neutral-500">
+    <p
+      className="text-[10px] font-medium uppercase tracking-[1.5px]"
+      style={{ color: "var(--text-muted)" }}
+    >
       {t("recentTitle")}
     </p>
   );

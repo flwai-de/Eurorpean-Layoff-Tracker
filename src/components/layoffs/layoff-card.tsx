@@ -30,12 +30,17 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
   const locale = useLocale() as "de" | "en";
   const t = useTranslations("layoff");
   const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
-  const title = rawTitle ?? generateLayoffTitle({
-    companyName: layoff.company.name,
-    affectedCount: layoff.affectedCount,
-    affectedPercentage: layoff.affectedPercentage,
-    isShutdown: layoff.isShutdown,
-  }, locale);
+  const title =
+    rawTitle ??
+    generateLayoffTitle(
+      {
+        companyName: layoff.company.name,
+        affectedCount: layoff.affectedCount,
+        affectedPercentage: layoff.affectedPercentage,
+        isShutdown: layoff.isShutdown,
+      },
+      locale,
+    );
   const flag = getCountryFlag(layoff.country);
   const countryName = getCountryName(layoff.country, locale);
   const initials = layoff.company.name
@@ -51,57 +56,64 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
     : null;
 
   return (
-    <div className="group relative flex items-center gap-4 border-b border-neutral-200 py-4 transition dark:border-neutral-800/50">
-      <Link
-        href={`/layoff/${layoff.id}`}
-        className="absolute inset-0 z-0"
-        aria-label={title}
-      />
-
+    <Link
+      href={`/layoff/${layoff.id}`}
+      aria-label={title}
+      className="row-link -mx-2.5 flex items-center gap-3.5 rounded-lg px-2.5 py-3"
+    >
       {/* Logo / Initials */}
       {layoff.company.logoUrl ? (
         <Image
           src={layoff.company.logoUrl}
-          alt={layoff.company.name}
+          alt=""
           width={34}
           height={34}
           unoptimized
           className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
         />
       ) : (
-        <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-[13px] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+        <div
+          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg text-[13px] font-medium"
+          style={{
+            backgroundColor: "var(--initial-bg)",
+            color: "var(--initial-text)",
+          }}
+        >
           {initials}
         </div>
       )}
 
       {/* Content */}
-      <div className="relative z-10 min-w-0 flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <Link
-            href={`/company/${layoff.company.slug}`}
-            className="text-[14px] font-medium text-neutral-900 hover:underline dark:text-white"
+          <span
+            className="text-[14px] font-medium"
+            style={{ color: "var(--text-primary)" }}
           >
             {layoff.company.name}
-          </Link>
-          {industryName && layoff.company.industrySlug && (
-            <Link
-              href={`/industry/${layoff.company.industrySlug}`}
-              className="text-[11px] text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300"
+          </span>
+          {industryName && (
+            <span
+              className="text-[11px]"
+              style={{ color: "var(--text-muted)" }}
             >
               {industryName}
-            </Link>
+            </span>
           )}
         </div>
-        <p className="mt-0.5 truncate text-[13px] text-neutral-500 dark:text-neutral-400">
+        <p
+          className="mt-0.5 truncate text-[13px]"
+          style={{ color: "var(--text-secondary)" }}
+        >
           {title}
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 text-[11px] text-neutral-400 dark:text-neutral-500">
-          <Link
-            href={`/country/${layoff.country}`}
-            className="relative z-10 hover:text-neutral-600 dark:hover:text-neutral-300"
-          >
+        <div
+          className="mt-1 flex flex-wrap items-center gap-x-2 text-[11px]"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <span>
             {flag} {countryName}
-          </Link>
+          </span>
           {layoff.affectedCount != null && (
             <span>
               · {t("affected")}: {layoff.affectedCount.toLocaleString("de-DE")}
@@ -111,18 +123,46 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
       </div>
 
       {/* Right-aligned affected count + date */}
-      <div className="relative z-0 shrink-0 text-right">
+      <div className="shrink-0 text-right">
         {layoff.affectedCount != null ? (
-          <p className="text-[18px] font-medium tabular-nums tracking-[-0.5px] text-red-500">
+          <p
+            className="text-[18px] font-medium tabular-nums tracking-[-0.5px]"
+            style={{ color: "var(--accent-danger)" }}
+          >
             {layoff.affectedCount.toLocaleString("de-DE")}
           </p>
         ) : (
-          <p className="text-[18px] font-medium text-neutral-400 dark:text-neutral-600">—</p>
+          <p
+            className="text-[18px] font-medium"
+            style={{ color: "var(--text-muted)" }}
+          >
+            —
+          </p>
         )}
-        <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-500">
+        <p
+          className="mt-0.5 text-[10px]"
+          style={{ color: "var(--text-muted)" }}
+        >
           {getRelativeTime(layoff.date, locale)}
         </p>
       </div>
-    </div>
+
+      {/* Chevron */}
+      <svg
+        className="h-4 w-4 shrink-0 opacity-30"
+        viewBox="0 0 16 16"
+        fill="none"
+        style={{ color: "var(--text-muted)" }}
+        aria-hidden="true"
+      >
+        <path
+          d="M6 4l4 4-4 4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </Link>
   );
 }

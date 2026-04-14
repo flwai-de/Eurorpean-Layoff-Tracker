@@ -20,7 +20,8 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle theme"
-      className="rounded-lg p-2 text-neutral-400 transition hover:text-neutral-900 dark:hover:text-white"
+      className="nav-link rounded-lg p-2 transition-colors"
+      style={{ color: "var(--text-muted)" }}
     >
       {dark ? (
         // Sun icon

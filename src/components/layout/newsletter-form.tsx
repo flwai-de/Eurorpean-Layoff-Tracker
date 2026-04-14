@@ -48,18 +48,28 @@ export default function NewsletterForm() {
           type="email"
           required
           placeholder={t("emailPlaceholder")}
-          className="flex-1 rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-[12px] text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none dark:border-neutral-800/50 dark:text-white dark:placeholder:text-neutral-600 dark:focus:border-neutral-600"
+          className="select-filter flex-1 rounded-lg border bg-transparent px-3 py-2 text-[12px] focus:outline-none focus:ring-1"
+          style={{
+            borderColor: "var(--border-default)",
+            color: "var(--text-primary)",
+          }}
         />
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-[12px] font-medium text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          className="rounded-lg px-4 py-2 text-[12px] font-medium transition disabled:opacity-50"
+          style={{
+            backgroundColor: "var(--pill-active-bg)",
+            color: "var(--pill-active-fg)",
+          }}
         >
           {isPending ? "..." : t("submitButton")}
         </button>
       </div>
       {status === "error" && (
-        <p className="mt-1 text-[10px] text-red-500 dark:text-red-400">{errorMsg}</p>
+        <p className="mt-1 text-[10px]" style={{ color: "var(--accent-danger)" }}>
+          {errorMsg}
+        </p>
       )}
     </form>
   );

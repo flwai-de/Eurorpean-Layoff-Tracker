@@ -8,12 +8,16 @@ export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("common");
 
+  const linkClass = "nav-link text-[13px] font-normal transition-colors";
+  const linkStyle = { color: "var(--text-secondary)" };
+
   return (
     <div className="md:hidden">
       <button
         onClick={() => setOpen(!open)}
         aria-label="Toggle menu"
-        className="rounded-lg p-2 text-neutral-400 transition hover:text-neutral-900 dark:hover:text-white"
+        className="rounded-lg p-2 transition-colors"
+        style={{ color: "var(--text-muted)" }}
       >
         {open ? (
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,18 +33,24 @@ export default function MobileNav() {
         )}
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-16 border-b border-neutral-200/70 bg-white p-4 dark:border-neutral-800/50 dark:bg-neutral-950">
+        <div
+          className="absolute left-0 right-0 top-16 border-b p-4"
+          style={{
+            backgroundColor: "var(--bg-base)",
+            borderColor: "var(--border-default)",
+          }}
+        >
           <nav className="flex flex-col gap-3">
-            <Link href="/" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+            <Link href="/" onClick={() => setOpen(false)} className={linkClass} style={linkStyle}>
               {t("home")}
             </Link>
-            <Link href="/industries" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+            <Link href="/industries" onClick={() => setOpen(false)} className={linkClass} style={linkStyle}>
               {t("industries")}
             </Link>
-            <Link href="/newsletter" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+            <Link href="/newsletter" onClick={() => setOpen(false)} className={linkClass} style={linkStyle}>
               {t("newsletter")}
             </Link>
-            <Link href="/submit" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+            <Link href="/submit" onClick={() => setOpen(false)} className={linkClass} style={linkStyle}>
               {t("submitTip")}
             </Link>
           </nav>

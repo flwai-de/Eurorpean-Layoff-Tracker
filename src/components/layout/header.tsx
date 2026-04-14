@@ -7,29 +7,49 @@ import MobileNav from "./mobile-nav";
 export default function Header() {
   const t = useTranslations("common");
 
-  const navLinkClass =
-    "text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white";
-
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-white/80 backdrop-blur dark:border-neutral-800/50 dark:bg-neutral-950/80">
+    <header
+      className="sticky top-0 z-50 border-b backdrop-blur"
+      style={{
+        backgroundColor: "color-mix(in srgb, var(--bg-base) 80%, transparent)",
+        borderColor: "var(--border-default)",
+      }}
+    >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
           href="/"
-          className="text-[19px] font-medium tracking-tight text-neutral-900 dark:text-white"
+          className="text-[19px] font-medium tracking-tight"
+          style={{ color: "var(--text-primary)" }}
         >
           dimissio
         </Link>
         <nav className="hidden items-center gap-7 md:flex">
-          <Link href="/" className={navLinkClass}>
+          <Link
+            href="/"
+            className="nav-link text-[13px] font-normal transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
             {t("home")}
           </Link>
-          <Link href="/industries" className={navLinkClass}>
+          <Link
+            href="/industries"
+            className="nav-link text-[13px] font-normal transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
             {t("industries")}
           </Link>
-          <Link href="/newsletter" className={navLinkClass}>
+          <Link
+            href="/newsletter"
+            className="nav-link text-[13px] font-normal transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
             {t("newsletter")}
           </Link>
-          <Link href="/submit" className={navLinkClass}>
+          <Link
+            href="/submit"
+            className="nav-link text-[13px] font-normal transition-colors"
+            style={{ color: "var(--text-secondary)" }}
+          >
             {t("submitTip")}
           </Link>
         </nav>
