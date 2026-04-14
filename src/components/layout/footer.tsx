@@ -23,14 +23,14 @@ export default function Footer() {
             <p className="text-sm font-semibold text-neutral-900 dark:text-white">Links</p>
             <ul className="mt-2 space-y-2 text-sm">
               <li>
-                <a href="#" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+                <Link href="/datenschutz" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
                   {t("common.privacy")}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+                <Link href="/impressum" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
                   {t("common.imprint")}
-                </a>
+                </Link>
               </li>
               <li>
                 <Link href="/api-docs" className="text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
