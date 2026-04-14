@@ -12,7 +12,7 @@ export const INDUSTRY_GROUPS: IndustryGroup[] = [
   { key: "finance", labelEn: "Finance", labelDe: "Finanzen", slugs: ["finance", "consulting"] },
   { key: "health", labelEn: "Health", labelDe: "Gesundheit", slugs: ["healthcare", "pharma"] },
   { key: "retail", labelEn: "Retail & Consumer", labelDe: "Handel & Konsum", slugs: ["retail", "logistics", "travel"] },
-  { key: "media", labelEn: "Media & Telecom", labelDe: "Medien & Telko", slugs: ["media", "telecom"] },
+  { key: "media", labelEn: "Telecommunications & Media", labelDe: "Telekommunikation & Medien", slugs: ["media", "telecom"] },
 ];
 
 export const OTHER_GROUP: IndustryGroup = {
