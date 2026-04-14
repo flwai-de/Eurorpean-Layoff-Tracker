@@ -17,29 +17,25 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Worker needs: source files, full node_modules (for tsx + deps), tsconfig.
+# node_modules ends up duplicated vs. the standalone copy — ~100MB extra,
+# acceptable on a dedicated server and keeps the worker in the same container.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --chown=nextjs:nodejs src ./src
+COPY --chown=nextjs:nodejs package.json tsconfig.json ./
+COPY --chown=nextjs:nodejs scripts/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
-
-# ============================================================
-# Worker stage — BullMQ worker process (runs src/workers/index.ts via tsx)
-# ============================================================
-FROM base AS worker
-WORKDIR /app
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs
-# Full dependency set (tsx is a devDependency) + source needed by tsconfig paths
-COPY --from=deps /app/node_modules ./node_modules
-COPY --chown=nextjs:nodejs package.json tsconfig.json ./
-COPY --chown=nextjs:nodejs src ./src
-USER nextjs
-CMD ["npx", "tsx", "src/workers/index.ts"]
+CMD ["./start.sh"]
