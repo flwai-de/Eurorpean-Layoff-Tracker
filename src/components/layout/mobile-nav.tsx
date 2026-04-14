@@ -29,18 +29,18 @@ export default function MobileNav() {
         )}
       </button>
       {open && (
-        <div className="absolute left-0 right-0 top-16 border-b border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="absolute left-0 right-0 top-16 border-b border-neutral-200/70 bg-white p-4 dark:border-neutral-800/50 dark:bg-neutral-950">
           <nav className="flex flex-col gap-3">
-            <Link href="/" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            <Link href="/" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
               {t("home")}
             </Link>
-            <Link href="/industries" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            <Link href="/industries" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
               {t("industries")}
             </Link>
-            <Link href="/newsletter" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            <Link href="/newsletter" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
               {t("newsletter")}
             </Link>
-            <Link href="/submit" onClick={() => setOpen(false)} className="text-sm text-neutral-600 transition hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
+            <Link href="/submit" onClick={() => setOpen(false)} className="text-[13px] font-normal text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
               {t("submitTip")}
             </Link>
           </nav>

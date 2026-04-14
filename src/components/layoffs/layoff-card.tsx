@@ -44,25 +44,17 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
-
-  const severityColor =
-    layoff.affectedCount == null
-      ? "#6B7280"
-      : layoff.affectedCount >= 5000
-        ? "#EF4444"
-        : layoff.affectedCount >= 1000
-          ? "#F59E0B"
-          : "#EAB308";
+  const industryName = layoff.company.industry
+    ? locale === "de"
+      ? layoff.company.industry.nameDe
+      : layoff.company.industry.nameEn
+    : null;
 
   return (
-    <div
-      className="group relative flex gap-4 overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 pl-5 transition hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
-      style={{ borderLeft: `4px solid ${severityColor}` }}
-    >
-      {/* Card-level link (covers entire card) */}
+    <div className="group relative flex items-center gap-4 border-b border-neutral-200 py-4 transition dark:border-neutral-800/50">
       <Link
         href={`/layoff/${layoff.id}`}
-        className="absolute inset-0 z-0 rounded-xl"
+        className="absolute inset-0 z-0"
         aria-label={title}
       />
 
@@ -71,56 +63,65 @@ export default function LayoffCard({ layoff }: LayoffCardProps) {
         <Image
           src={layoff.company.logoUrl}
           alt={layoff.company.name}
-          width={40}
-          height={40}
+          width={34}
+          height={34}
           unoptimized
-          className="h-10 w-10 shrink-0 rounded-lg object-contain"
+          className="h-[34px] w-[34px] shrink-0 rounded-lg object-contain"
         />
       ) : (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-xs font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+        <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-[13px] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
           {initials}
         </div>
       )}
 
       {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
+      <div className="relative z-10 min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <Link
+            href={`/company/${layoff.company.slug}`}
+            className="text-[14px] font-medium text-neutral-900 hover:underline dark:text-white"
+          >
+            {layoff.company.name}
+          </Link>
+          {industryName && layoff.company.industrySlug && (
             <Link
-              href={`/company/${layoff.company.slug}`}
-              className="relative z-10 text-sm font-semibold text-neutral-900 hover:text-teal-700 dark:text-white dark:hover:text-teal-400"
+              href={`/industry/${layoff.company.industrySlug}`}
+              className="text-[11px] text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300"
             >
-              {layoff.company.name}
+              {industryName}
             </Link>
-            <p className="mt-0.5 truncate text-sm text-neutral-600 dark:text-neutral-300">
-              {title}
-            </p>
-          </div>
-          <span className="shrink-0 text-xs text-neutral-400">
-            {getRelativeTime(layoff.date, locale)}
-          </span>
+          )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="mt-0.5 truncate text-[13px] text-neutral-500 dark:text-neutral-400">
+          {title}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 text-[11px] text-neutral-400 dark:text-neutral-500">
           <Link
             href={`/country/${layoff.country}`}
-            className="relative z-10 hover:text-teal-700 dark:hover:text-teal-400"
+            className="relative z-10 hover:text-neutral-600 dark:hover:text-neutral-300"
           >
             {flag} {countryName}
           </Link>
           {layoff.affectedCount != null && (
             <span>
-              {t("affected")}: {layoff.affectedCount.toLocaleString("de-DE")}
+              · {t("affected")}: {layoff.affectedCount.toLocaleString("de-DE")}
             </span>
           )}
-          {layoff.company.industrySlug && (
-            <Link
-              href={`/industry/${layoff.company.industrySlug}`}
-              className="relative z-10 rounded-full bg-neutral-100 px-2 py-0.5 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-            >
-              {locale === "de" ? layoff.company.industry.nameDe : layoff.company.industry.nameEn}
-            </Link>
-          )}
         </div>
+      </div>
+
+      {/* Right-aligned affected count + date */}
+      <div className="relative z-0 shrink-0 text-right">
+        {layoff.affectedCount != null ? (
+          <p className="text-[18px] font-medium tabular-nums tracking-[-0.5px] text-red-500">
+            {layoff.affectedCount.toLocaleString("de-DE")}
+          </p>
+        ) : (
+          <p className="text-[18px] font-medium text-neutral-400 dark:text-neutral-600">—</p>
+        )}
+        <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-500">
+          {getRelativeTime(layoff.date, locale)}
+        </p>
       </div>
     </div>
   );

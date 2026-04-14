@@ -29,24 +29,24 @@ export default function SidebarRankings({
   const nf = locale === "de" ? "de-DE" : "en-US";
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="mb-3 flex gap-2 border-b border-neutral-200 dark:border-neutral-800">
+    <div>
+      <div className="mb-3 flex gap-5">
         <button
           onClick={() => setTab("top")}
-          className={`-mb-px border-b-2 px-2 py-2 text-sm font-semibold transition ${
+          className={`pb-2 text-[11px] font-medium uppercase tracking-[0.5px] transition ${
             tab === "top"
-              ? "border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-400"
-              : "border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              ? "border-b-[1.5px] border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+              : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
           }`}
         >
           {t("topLayoffsTitle", { year: currentYear })}
         </button>
         <button
           onClick={() => setTab("trending")}
-          className={`-mb-px border-b-2 px-2 py-2 text-sm font-semibold transition ${
+          className={`pb-2 text-[11px] font-medium uppercase tracking-[0.5px] transition ${
             tab === "trending"
-              ? "border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-400"
-              : "border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              ? "border-b-[1.5px] border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+              : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
           }`}
         >
           {t("trendingTitle")}
@@ -54,9 +54,11 @@ export default function SidebarRankings({
       </div>
 
       {list.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-400">{t("noData")}</p>
+        <p className="mt-4 text-[12px] text-neutral-400 dark:text-neutral-500">
+          {t("noData")}
+        </p>
       ) : (
-        <ul className="space-y-3">
+        <ul>
           {list.map((layoff, i) => {
             const rawTitle = locale === "de" ? layoff.titleDe : layoff.titleEn;
             const title =
@@ -71,27 +73,30 @@ export default function SidebarRankings({
                 locale,
               );
             return (
-              <li key={layoff.id}>
-                <Link href={`/layoff/${layoff.id}`} className="group block">
+              <li
+                key={layoff.id}
+                className="border-b border-neutral-200/70 last:border-b-0 dark:border-neutral-800/30"
+              >
+                <Link href={`/layoff/${layoff.id}`} className="group block py-2.5">
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-bold text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                    <span className="mt-0.5 w-5 shrink-0 text-[14px] font-medium tabular-nums text-neutral-400 dark:text-neutral-600">
                       {i + 1}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-neutral-900 transition group-hover:text-teal-700 dark:text-white dark:group-hover:text-teal-400">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-neutral-900 transition group-hover:underline dark:text-white">
                         {layoff.company.name}
                       </p>
-                      <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
+                      <p className="truncate text-[11px] text-neutral-500 dark:text-neutral-400">
                         {title}
                       </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400">
+                      <div className="mt-0.5 flex items-center gap-2 text-[10px] text-neutral-400 dark:text-neutral-500">
                         <span>
                           {getCountryFlag(layoff.country)}{" "}
                           {getCountryName(layoff.country, locale)}
                         </span>
                         {layoff.affectedCount != null && (
                           <span>
-                            {tLayoff("affected")}:{" "}
+                            · {tLayoff("affected")}:{" "}
                             {layoff.affectedCount.toLocaleString(nf)}
                           </span>
                         )}

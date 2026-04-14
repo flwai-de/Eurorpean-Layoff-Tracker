@@ -16,15 +16,17 @@ export default function LayoffFeed({ layoffs, total, page, perPage }: LayoffFeed
 
   if (layoffs.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-        <p className="text-sm text-neutral-400">{t("noLayoffs")}</p>
+      <div className="flex h-40 items-center justify-center border-y border-neutral-200 dark:border-neutral-800/50">
+        <p className="text-[13px] text-neutral-400 dark:text-neutral-500">
+          {t("noLayoffs")}
+        </p>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="space-y-3">
+      <div className="border-t border-neutral-200 dark:border-neutral-800/50">
         {layoffs.map((layoff) => (
           <LayoffCard key={layoff.id} layoff={layoff} />
         ))}
@@ -32,31 +34,31 @@ export default function LayoffFeed({ layoffs, total, page, perPage }: LayoffFeed
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-6 py-6">
           {page > 1 ? (
             <Link
               href={`/?page=${page - 1}`}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="text-[12px] text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
               {t("prevPage")}
             </Link>
           ) : (
-            <span className="rounded-lg border border-neutral-100 px-4 py-2 text-sm text-neutral-300 dark:border-neutral-800 dark:text-neutral-600">
+            <span className="text-[12px] text-neutral-300 dark:text-neutral-700">
               {t("prevPage")}
             </span>
           )}
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
             {t("page", { current: page, total: totalPages })}
           </span>
           {page < totalPages ? (
             <Link
               href={`/?page=${page + 1}`}
-              className="rounded-lg border border-neutral-200 px-4 py-2 text-sm text-neutral-600 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="text-[12px] text-neutral-500 transition hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
               {t("nextPage")}
             </Link>
           ) : (
-            <span className="rounded-lg border border-neutral-100 px-4 py-2 text-sm text-neutral-300 dark:border-neutral-800 dark:text-neutral-600">
+            <span className="text-[12px] text-neutral-300 dark:text-neutral-700">
               {t("nextPage")}
             </span>
           )}

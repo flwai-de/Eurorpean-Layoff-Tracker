@@ -53,10 +53,10 @@ export default function IndustryChips({ chips }: IndustryChipsProps) {
           <button
             key={item.key || "all"}
             onClick={() => select(item.key)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-medium transition ${
               active
-                ? "bg-teal-600 text-white dark:bg-teal-500"
-                : "border border-neutral-200 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                : "border border-neutral-200 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 dark:border-neutral-800/50 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-white"
             }`}
           >
             {item.label}

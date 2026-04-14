@@ -21,14 +21,14 @@ function TrendIndicator({
   pct: number | null;
   prevYear: number;
 }) {
-  if (pct == null) return <p className="mt-1 h-4 text-xs">&nbsp;</p>;
+  if (pct == null) {
+    return <p className="mt-2 h-[15px] text-[11px]">&nbsp;</p>;
+  }
   const up = pct >= 0;
   const arrow = up ? "\u2191" : "\u2193";
-  const color = up
-    ? "text-red-500 dark:text-red-400"
-    : "text-green-600 dark:text-green-400";
+  const color = up ? "text-red-500" : "text-emerald-500";
   return (
-    <p className={`mt-1 text-xs font-medium ${color}`}>
+    <p className={`mt-2 text-[11px] font-medium ${color}`}>
       {arrow} {Math.abs(pct)}% vs. {prevYear}
     </p>
   );
@@ -69,24 +69,24 @@ export default function HeroStats({ stats }: HeroStatsProps) {
   ];
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
-      <h1 className="text-center text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
+    <section className="mx-auto max-w-6xl px-6 pt-12 pb-10">
+      <h1 className="mx-auto text-center text-[32px] font-medium leading-[1.1] tracking-[-1.5px] text-neutral-900 dark:text-white sm:text-[40px]">
         {t("heroHeadline")}
       </h1>
-      <div className="mt-8 grid grid-cols-2 items-stretch gap-4 lg:grid-cols-4">
+      <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200 sm:grid-cols-4 dark:bg-neutral-800">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="flex min-h-[140px] flex-col rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"
+            className="flex min-h-[130px] flex-col bg-white p-5 dark:bg-neutral-900"
           >
-            <p className="text-3xl font-bold tabular-nums text-teal-700 dark:text-teal-400">
+            <p className="text-[28px] font-medium tabular-nums leading-none tracking-[-1px] text-neutral-900 dark:text-white">
               {card.value}
             </p>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="mt-2 text-[11px] text-neutral-500 dark:text-neutral-400">
               {card.label}
             </p>
             {card.sub ? (
-              <p className="text-xs text-neutral-400 dark:text-neutral-500">
+              <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-500">
                 {card.sub}
               </p>
             ) : null}

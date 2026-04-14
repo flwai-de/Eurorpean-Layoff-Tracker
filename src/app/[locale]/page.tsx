@@ -105,7 +105,7 @@ export default async function HomePage({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <FeedTitle />
-            <div className="mt-4">
+            <div className="mt-2">
               <LayoffFeed
                 layoffs={layoffsResult.data}
                 total={layoffsResult.total}
@@ -131,8 +131,8 @@ export default async function HomePage({
 function FeedTitle() {
   const t = useTranslations("home");
   return (
-    <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+    <p className="text-[10px] font-medium uppercase tracking-[1.5px] text-neutral-500 dark:text-neutral-500">
       {t("recentTitle")}
-    </h2>
+    </p>
   );
 }

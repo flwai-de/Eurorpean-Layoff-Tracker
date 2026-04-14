@@ -54,12 +54,12 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
   if (!entry) return null;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3 text-sm shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+    <div className="rounded-lg border border-neutral-200 bg-white p-3 text-[12px] shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
       <p className="font-medium text-neutral-900 dark:text-white">{label}</p>
-      <p className="text-neutral-600 dark:text-neutral-300">
+      <p className="text-neutral-500 dark:text-neutral-400">
         Layoffs: {entry.layoffCount}
       </p>
-      <p className="text-neutral-600 dark:text-neutral-300">
+      <p className="text-neutral-500 dark:text-neutral-400">
         Affected: {entry.affectedCount.toLocaleString()}
       </p>
     </div>
@@ -89,13 +89,13 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
   const nf = locale === "de" ? "de-DE" : "en-US";
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-8">
-      <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+    <section className="mx-auto max-w-6xl px-6 pt-6 pb-12">
+      <p className="mb-4 text-[10px] font-medium uppercase tracking-[1.5px] text-neutral-500 dark:text-neutral-500">
         {t("chartTitle", { year: activeYear })}
-      </h2>
+      </p>
 
       {years.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mb-5 flex flex-wrap items-center gap-1">
           {years.map((y) => {
             const active = y === activeYear;
             const s = summaryMap.get(y);
@@ -103,20 +103,28 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
               <button
                 key={y}
                 onClick={() => setActiveYear(y)}
-                className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                className={`rounded-lg px-4 py-2 text-left text-[12px] font-medium transition ${
                   active
-                    ? "border-teal-500 bg-teal-50 text-teal-800 dark:border-teal-400 dark:bg-teal-950/40 dark:text-teal-300"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
                 }`}
               >
-                <span className="block font-semibold">{y}</span>
+                <span className="block">{y}</span>
                 {s ? (
-                  <span className="block text-xs opacity-80">
+                  <span
+                    className={`block text-[10px] font-normal ${
+                      active
+                        ? "text-neutral-500 dark:text-neutral-500"
+                        : "text-neutral-400 dark:text-neutral-500"
+                    }`}
+                  >
                     {s.layoffCount.toLocaleString(nf)} {t("layoffsWord")} &middot;{" "}
                     {s.affectedCount.toLocaleString(nf)} {t("affectedWord")}
                   </span>
                 ) : (
-                  <span className="block text-xs opacity-60">{t("noData")}</span>
+                  <span className="block text-[10px] font-normal text-neutral-500">
+                    {t("noData")}
+                  </span>
                 )}
               </button>
             );
@@ -124,23 +132,31 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
         </div>
       )}
 
-      <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-xl border border-neutral-200 p-6 dark:border-neutral-800/50">
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>
             <XAxis
               dataKey="label"
-              tick={{ fill: "#a3a3a3", fontSize: 12 }}
-              axisLine={{ stroke: "#404040" }}
+              tick={{ fill: "#737373", fontSize: 10 }}
+              axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#a3a3a3", fontSize: 12 }}
+              tick={{ fill: "#737373", fontSize: 10 }}
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(115,115,115,0.1)" }} />
-            <Bar dataKey="layoffCount" fill="#2dd4bf" radius={[4, 4, 0, 0]} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: "rgba(115,115,115,0.08)" }}
+            />
+            <Bar
+              dataKey="layoffCount"
+              fill="currentColor"
+              className="text-neutral-900/15 dark:text-white/20"
+              radius={[3, 3, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

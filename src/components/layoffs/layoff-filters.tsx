@@ -67,7 +67,7 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
       <select
         value={currentCountry}
         onChange={(e) => updateFilter("country", e.target.value)}
-        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+        className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-[12px] text-neutral-500 transition hover:border-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:border-neutral-800/50 dark:text-neutral-400 dark:hover:border-neutral-600 dark:focus:border-neutral-500 dark:focus:ring-neutral-600"
       >
         <option value="">{t("country")}: {t("all")}</option>
         {regions.map(([code]) => (
@@ -87,7 +87,7 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
       <select
         value={currentIndustry}
         onChange={(e) => updateFilter("industry", e.target.value)}
-        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+        className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-[12px] text-neutral-500 transition hover:border-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:border-neutral-800/50 dark:text-neutral-400 dark:hover:border-neutral-600 dark:focus:border-neutral-500 dark:focus:ring-neutral-600"
       >
         <option value="">{t("industry")}: {t("all")}</option>
         {industries.map((ind) => (
@@ -101,7 +101,7 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
       <select
         value={currentPeriod}
         onChange={(e) => updateFilter("period", e.target.value)}
-        className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+        className="rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-[12px] text-neutral-500 transition hover:border-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:border-neutral-800/50 dark:text-neutral-400 dark:hover:border-neutral-600 dark:focus:border-neutral-500 dark:focus:ring-neutral-600"
       >
         {PERIOD_VALUES.map((p) => (
           <option key={p.key} value={p.key}>
@@ -114,7 +114,7 @@ export default function LayoffFilters({ industries }: LayoffFiltersProps) {
       {hasFilters && (
         <button
           onClick={resetFilters}
-          className="rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-500 transition hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+          className="rounded-lg border border-neutral-200 px-3 py-2 text-[12px] text-neutral-500 transition hover:border-neutral-400 dark:border-neutral-800/50 dark:text-neutral-400 dark:hover:border-neutral-600"
         >
           {t("reset")}
         </button>
