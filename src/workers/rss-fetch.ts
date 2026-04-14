@@ -5,6 +5,8 @@ import { enqueueAllActiveFeeds } from "@/lib/queue/cron";
 import { db } from "@/lib/db";
 import { rssFeeds, rssArticles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { checkRelevance } from "@/lib/utils/keyword-filter";
+import { sendTelegramAlert, formatLayoffAlert } from "@/lib/telegram";
 
 const parser = new Parser({
   timeout: 20_000,
@@ -43,21 +45,45 @@ async function handleFetchFeed(job: Job<FetchFeedPayload>) {
       });
       if (existing) continue;
 
+      const title = item.title ?? "Untitled";
+      const rawContent =
+        item.contentSnippet ?? item.content ?? item.summary ?? null;
+
+      const relevance = checkRelevance(title, rawContent ?? undefined);
+
       const [newArticle] = await db
         .insert(rssArticles)
         .values({
           feedId,
-          title: item.title ?? "Untitled",
+          title,
           url: articleUrl,
           publishedAt: item.isoDate ? new Date(item.isoDate) : null,
-          rawContent: item.contentSnippet ?? item.content ?? item.summary ?? null,
+          rawContent,
+          isRelevant: relevance.isRelevant,
+          relevanceReasoning:
+            relevance.matchedKeywords.length > 0
+              ? `keywords: ${relevance.matchedKeywords.join(", ")}`
+              : null,
         })
         .returning({ id: rssArticles.id });
 
-      await aiExtractQueue.add("extract", { articleId: newArticle.id }, {
-        removeOnComplete: 100,
-        removeOnFail: 200,
-      });
+      if (relevance.isRelevant && relevance.tier) {
+        await sendTelegramAlert(
+          formatLayoffAlert({
+            tier: relevance.tier,
+            articleTitle: title,
+            matchedKeywords: relevance.matchedKeywords,
+            feedName: feed.name,
+            articleUrl,
+          }),
+        );
+
+        await aiExtractQueue.add(
+          "extract",
+          { articleId: newArticle.id },
+          { removeOnComplete: 100, removeOnFail: 200 },
+        );
+      }
 
       inserted++;
     }

@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 export async function registerCronJobs() {
   await rssFetchQueue.upsertJobScheduler(
     "rss-fetch-cron",
-    { pattern: "0 */2 * * *" },
+    { pattern: "*/15 * * * *" },
     { name: "fetch-all-feeds" },
   );
 }
