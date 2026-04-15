@@ -122,7 +122,7 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
                         backgroundColor: "var(--tab-active-bg)",
                         color: "var(--tab-active-fg)",
                       }
-                    : { color: "var(--text-muted)" }
+                    : { color: "var(--text-secondary)" }
                 }
               >
                 <span className="block">{y}</span>
@@ -131,8 +131,8 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
                     className="block text-[10px] font-normal"
                     style={
                       active
-                        ? { color: "var(--text-muted)", opacity: 0.7 }
-                        : { color: "var(--text-muted)" }
+                        ? { color: "var(--tab-active-fg)", opacity: 0.7 }
+                        : { color: "var(--text-secondary)", opacity: 0.8 }
                     }
                   >
                     {s.layoffCount.toLocaleString(nf)} {t("layoffsWord")} &middot;{" "}
@@ -141,7 +141,7 @@ export default function TrendChart({ yearsData, summaries, defaultYear }: TrendC
                 ) : (
                   <span
                     className="block text-[10px] font-normal"
-                    style={{ color: "var(--text-muted)" }}
+                    style={{ color: "var(--text-secondary)", opacity: 0.8 }}
                   >
                     {t("noData")}
                   </span>

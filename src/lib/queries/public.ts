@@ -228,6 +228,7 @@ export async function getHeroStats(): Promise<HeroStats> {
 
   // Prior year window: Jan 1 (Y-1) through same month/day of (Y-1)
   const prevYearStart = `${year - 1}-01-01`;
+  const prevYearFullEnd = `${year - 1}-12-31`;
   const mmdd = todayStr.slice(4); // "-MM-DD"
   const prevYearEnd = `${year - 1}${mmdd}`;
 
@@ -238,7 +239,7 @@ export async function getHeroStats(): Promise<HeroStats> {
 
   const verified = eq(layoffs.status, "verified");
 
-  const [totals, yearRow, prevYearRow] = await Promise.all([
+  const [totals, yearRow, prevYearRow, prevYearFullRow] = await Promise.all([
     db
       .select({
         totalLayoffs: count(),
@@ -266,6 +267,18 @@ export async function getHeroStats(): Promise<HeroStats> {
           lte(layoffs.date, prevYearEnd),
         ),
       ),
+    db
+      .select({
+        affected: sum(layoffs.affectedCount),
+      })
+      .from(layoffs)
+      .where(
+        and(
+          verified,
+          gte(layoffs.date, prevYearStart),
+          lte(layoffs.date, prevYearFullEnd),
+        ),
+      ),
   ]);
 
   const yearLayoffs = yearRow[0]?.layoffCount ?? 0;
@@ -273,9 +286,13 @@ export async function getHeroStats(): Promise<HeroStats> {
   const prevYearLayoffs = prevYearRow[0]?.layoffCount ?? 0;
   const prevYearAffected = Number(prevYearRow[0]?.affected ?? 0);
 
+  const prevYearFullAffected = Number(prevYearFullRow[0]?.affected ?? 0);
+
   const hasPrev = prevYearLayoffs > 0 || prevYearAffected > 0;
-  const prevDailyAvg = hasPrev
-    ? Math.round(prevYearAffected / Math.max(1, daysSinceJan1))
+  // Card 4 compares current YTD daily avg against the prior year's full-year
+  // daily average (affected_prev_full / 365), per spec.
+  const prevDailyAvg = prevYearFullAffected > 0
+    ? Math.round(prevYearFullAffected / 365)
     : null;
 
   const stats: HeroStats = {
