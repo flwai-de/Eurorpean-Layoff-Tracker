@@ -82,7 +82,7 @@ export default function Footer() {
             <NewsletterForm />
             <p
               className="mt-2 text-[10px]"
-              style={{ color: "var(--text-muted)", opacity: 0.8 }}
+              style={{ color: "var(--text-muted)" }}
             >
               {t("newsletter.gdprNotice")}
             </p>
