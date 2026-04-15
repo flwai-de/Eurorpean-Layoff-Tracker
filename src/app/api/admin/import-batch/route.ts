@@ -1,15 +1,9 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { companies, layoffs } from "../src/lib/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
-
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
-
-const client = postgres(connectionString);
-const db = drizzle(client);
+import { NextResponse } from "next/server";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { companies, layoffs } from "@/lib/db/schema";
+import { generateSlug } from "@/lib/utils/slug";
 
 interface LayoffInput {
   company: string;
@@ -40,35 +34,6 @@ const LAYOFFS: LayoffInput[] = [
   { company: "Whirlpool", date: "2024-04-24", affected: 1000, percentage: "2.00", country: "WW", countryHq: "US", industry: "manufacturing", source: "https://hr.economictimes.indiatimes.com/news/workplace-4-0/talent-management/whirlpool-to-cut-1000-jobs-globally/109602232" },
 ];
 
-const TRANSLITERATION: Record<string, string> = {
-  "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss",
-  "Ä": "Ae", "Ö": "Oe", "Ü": "Ue",
-  "à": "a", "á": "a", "â": "a", "ã": "a", "å": "a",
-  "è": "e", "é": "e", "ê": "e", "ë": "e",
-  "ì": "i", "í": "i", "î": "i", "ï": "i",
-  "ò": "o", "ó": "o", "ô": "o", "õ": "o",
-  "ù": "u", "ú": "u", "û": "u",
-  "ý": "y", "ÿ": "y",
-  "ñ": "n", "ç": "c", "ð": "d", "þ": "th",
-  "Ø": "O", "ø": "o", "Æ": "Ae", "æ": "ae",
-  "Đ": "D", "đ": "d", "ł": "l", "Ł": "L",
-  "ń": "n", "ś": "s", "ź": "z", "ż": "z",
-  "č": "c", "ř": "r", "š": "s", "ž": "z", "ě": "e", "ů": "u",
-  "ă": "a", "ș": "s", "ț": "t",
-};
-
-function transliterate(text: string): string {
-  return text.replace(/[^\x00-\x7F]/g, (ch) => TRANSLITERATION[ch] ?? "");
-}
-
-function slugify(name: string): string {
-  return transliterate(name)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function extractDomain(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -83,10 +48,16 @@ function addDays(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
-async function main() {
+export async function POST() {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let inserted = 0;
   let skipped = 0;
   let errors = 0;
+  const details: string[] = [];
 
   await db.transaction(async (tx) => {
     for (const row of LAYOFFS) {
@@ -102,7 +73,7 @@ async function main() {
         if (existing.length > 0) {
           companyId = existing[0].id;
         } else {
-          const slug = slugify(row.company);
+          const slug = generateSlug(row.company);
           const slugExists = await tx
             .select({ id: companies.id })
             .from(companies)
@@ -148,7 +119,7 @@ async function main() {
 
         if (isDuplicate) {
           skipped++;
-          console.log(`SKIP  ${row.company} (${row.date})`);
+          details.push(`SKIP  ${row.company} (${row.date})`);
           continue;
         }
 
@@ -168,19 +139,13 @@ async function main() {
         });
 
         inserted++;
-        console.log(`OK    ${row.company} (${row.date}) — ${row.affected}`);
+        details.push(`OK    ${row.company} (${row.date}) — ${row.affected}`);
       } catch (err) {
         errors++;
-        console.error(`ERR   ${row.company}:`, err instanceof Error ? err.message : err);
+        details.push(`ERR   ${row.company}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   });
 
-  console.log(`\nImport complete: ${inserted} inserted, ${skipped} skipped, ${errors} errors (total: ${LAYOFFS.length})`);
-  await client.end();
+  return NextResponse.json({ inserted, skipped, errors, details });
 }
-
-main().catch((err) => {
-  console.error("Import failed:", err);
-  process.exit(1);
-});
