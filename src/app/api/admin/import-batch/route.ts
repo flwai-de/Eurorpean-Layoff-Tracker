@@ -48,7 +48,7 @@ function addDays(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
-export async function POST() {
+async function handler() {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -149,3 +149,6 @@ export async function POST() {
 
   return NextResponse.json({ inserted, skipped, errors, details });
 }
+
+export { handler as GET, handler as POST };
+
