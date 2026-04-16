@@ -50,19 +50,16 @@ function escapeHtml(input: string): string {
 }
 
 export function formatLayoffAlert(params: {
-  tier: 1 | 2;
   articleTitle: string;
-  matchedKeywords: string[];
   feedName: string;
   articleUrl: string;
 }): string {
-  const { tier, articleTitle, matchedKeywords, feedName, articleUrl } = params;
+  const { articleTitle, feedName, articleUrl } = params;
   return [
-    `🔔 <b>Neuer Layoff-Hinweis</b> (Tier ${tier})`,
+    `🔔 <b>Neuer Layoff-Hinweis</b>`,
     "",
     `<b>${escapeHtml(articleTitle)}</b>`,
     "",
-    `Keywords: ${escapeHtml(matchedKeywords.join(", "))}`,
     `Quelle: ${escapeHtml(feedName)}`,
     "",
     `<a href="${escapeHtml(articleUrl)}">Artikel lesen</a>`,

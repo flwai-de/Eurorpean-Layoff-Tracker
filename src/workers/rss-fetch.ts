@@ -4,8 +4,10 @@ import { connection, aiExtractQueue } from "@/lib/queue";
 import { enqueueAllActiveFeeds } from "@/lib/queue/cron";
 import { db } from "@/lib/db";
 import { rssFeeds, rssArticles } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { checkRelevance } from "@/lib/utils/keyword-filter";
+import { eq, and, gte } from "drizzle-orm";
+import { isBlacklistedUrl } from "@/lib/utils/url-blacklist";
+import { normalizeTitle } from "@/lib/utils/title-dedup";
+import { classifyArticle } from "@/lib/api/gemini-classify";
 import { sendTelegramAlert, formatLayoffAlert } from "@/lib/telegram";
 
 const parser = new Parser({
@@ -32,52 +34,119 @@ async function handleFetchFeed(job: Job<FetchFeedPayload>) {
 
   try {
     const parsed = await parser.parseURL(feed.url);
+
     let inserted = 0;
+    let blacklisted = 0;
+    let duplicates = 0;
+    let classified = 0;
+    let classifiedYes = 0;
+    let classifiedNo = 0;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     for (const item of parsed.items) {
       const articleUrl = item.link;
       if (!articleUrl) continue;
 
-      // Duplicate check
-      const existing = await db.query.rssArticles.findFirst({
+      // Stage 0: URL-Blacklist
+      if (isBlacklistedUrl(articleUrl)) {
+        blacklisted++;
+        continue;
+      }
+
+      // URL duplicate check (existing behavior)
+      const existingByUrl = await db.query.rssArticles.findFirst({
         where: eq(rssArticles.url, articleUrl),
         columns: { id: true },
       });
-      if (existing) continue;
+      if (existingByUrl) continue;
 
       const title = item.title ?? "Untitled";
+      const normalized = normalizeTitle(title);
       const rawContent =
         item.contentSnippet ?? item.content ?? item.summary ?? null;
 
-      const relevance = checkRelevance(title, rawContent ?? undefined);
+      // Stage 1: Near-duplicate title check (7 days)
+      const existingByTitle = await db
+        .select({ id: rssArticles.id })
+        .from(rssArticles)
+        .where(
+          and(
+            eq(rssArticles.titleNormalized, normalized),
+            gte(rssArticles.createdAt, sevenDaysAgo),
+          ),
+        )
+        .limit(1);
 
+      if (existingByTitle.length > 0) {
+        duplicates++;
+        continue;
+      }
+
+      // Insert article into DB
       const [newArticle] = await db
         .insert(rssArticles)
         .values({
           feedId,
           title,
+          titleNormalized: normalized,
           url: articleUrl,
           publishedAt: item.isoDate ? new Date(item.isoDate) : null,
           rawContent,
-          isRelevant: relevance.isRelevant,
-          relevanceReasoning:
-            relevance.matchedKeywords.length > 0
-              ? `keywords: ${relevance.matchedKeywords.join(", ")}`
-              : null,
         })
         .returning({ id: rssArticles.id });
 
-      if (relevance.isRelevant && relevance.tier) {
-        await sendTelegramAlert(
-          formatLayoffAlert({
-            tier: relevance.tier,
-            articleTitle: title,
-            matchedKeywords: relevance.matchedKeywords,
-            feedName: feed.name,
-            articleUrl,
-          }),
+      inserted++;
+
+      // Stage 2: Gemini Flash-Lite classification
+      try {
+        const classification = await classifyArticle(
+          title,
+          rawContent ?? undefined,
+        );
+        classified++;
+
+        if (classification.isLayoff) {
+          classifiedYes++;
+
+          await sendTelegramAlert(
+            formatLayoffAlert({
+              articleTitle: title,
+              feedName: feed.name,
+              articleUrl,
+            }),
+          );
+
+          await aiExtractQueue.add(
+            "extract",
+            { articleId: newArticle.id },
+            {
+              attempts: 2,
+              backoff: { type: "exponential", delay: 10_000 },
+              removeOnComplete: 100,
+              removeOnFail: 200,
+            },
+          );
+        } else {
+          classifiedNo++;
+
+          await db
+            .update(rssArticles)
+            .set({
+              isRelevant: false,
+              relevanceReasoning: "Gemini classified as non-layoff",
+              processedAt: new Date(),
+            })
+            .where(eq(rssArticles.id, newArticle.id));
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(
+          `[rss-fetch] Gemini classification failed for ${newArticle.id}: ${message}`,
         );
 
+        // Fallback: send to Haiku anyway
         await aiExtractQueue.add(
           "extract",
           { articleId: newArticle.id },
@@ -89,8 +158,6 @@ async function handleFetchFeed(job: Job<FetchFeedPayload>) {
           },
         );
       }
-
-      inserted++;
     }
 
     // Update feed status
@@ -99,7 +166,20 @@ async function handleFetchFeed(job: Job<FetchFeedPayload>) {
       .set({ lastFetchedAt: new Date(), lastError: null })
       .where(eq(rssFeeds.id, feedId));
 
-    return { feedId, itemsFound: parsed.items.length, inserted };
+    console.log(
+      `[rss-fetch] Feed "${feed.name}": ${parsed.items.length} items -> ${blacklisted} blacklisted, ${duplicates} duplicates, ${classified} classified, ${classifiedYes} yes, ${classifiedNo} no`,
+    );
+
+    return {
+      feedId,
+      itemsFound: parsed.items.length,
+      inserted,
+      blacklisted,
+      duplicates,
+      classified,
+      classifiedYes,
+      classifiedNo,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 

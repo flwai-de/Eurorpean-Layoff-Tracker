@@ -203,6 +203,7 @@ export const rssArticles = pgTable(
       .notNull()
       .references(() => rssFeeds.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
+    titleNormalized: text("title_normalized"),
     url: text("url").notNull().unique(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     isRelevant: boolean("is_relevant"),
@@ -214,6 +215,7 @@ export const rssArticles = pgTable(
   },
   (table) => [
     index("idx_rss_articles_url").on(table.url),
+    index("idx_rss_articles_title_normalized").on(table.titleNormalized, table.createdAt),
   ],
 );
 

@@ -20,6 +20,7 @@
     "@auth/drizzle-adapter": "^1.7.4",
     "@bull-board/api": "^6.21.0",
     "@bull-board/express": "^6.21.0",
+    "@google/genai": "^1.50.1",
     "bullmq": "^5.30.0",
     "drizzle-orm": "^0.38.0",
     "express": "^5.2.1",
