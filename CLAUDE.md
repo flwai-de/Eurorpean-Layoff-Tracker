@@ -7,7 +7,7 @@
 
 ## Projekt
 
-**Dimissio** (dimissio.eu) — zweisprachiger (DE/EN) europäischer Layoff-Tracker. Semi-automatische Pipeline: RSS → Claude Haiku → Admin-Verifizierung → Website + Newsletter + Social Media.
+**Dimissio** (dimissio.eu) — zweisprachiger (DE/EN) europäischer Layoff-Tracker. Semi-automatische Pipeline: RSS → Gemini-Flash-Lite (liberaler Prefilter) → Claude Haiku (strenger Gatekeeper + Extraktion) → Admin-Verifizierung → Website + Newsletter + Social Media.
 
 **Prod-Status:** 9 Module gescaffoldet, ~201 Layoffs live, Pipeline aktiv (10 Feeds).
 
@@ -20,7 +20,8 @@
 - BullMQ + Redis 7 (**Single-Container mit Next.js**, nicht separater Prozess in Prod)
 - NextAuth v5 Beta (GitHub OAuth, JWT)
 - Recharts, Resend, next-intl, Zod + React Hook Form
-- Anthropic SDK — Modell: `claude-haiku-4-5-20251001`
+- Anthropic SDK — Modell: `claude-haiku-4-5-20251001` (Layoff-Extraktion)
+- Google Gemini SDK — Modell: `gemini-2.5-flash-lite` (Prefilter-Classification)
 - Deployed: Coolify auf Hetzner CX23, Cloudflare DNS/CDN
 
 ---
@@ -77,7 +78,7 @@ npm run start            # Production Server (nicht manuell genutzt, läuft via 
 │   │   ├── api/                 # Anthropic Client
 │   │   ├── i18n/                # next-intl config, messages/
 │   │   ├── social/              # X/LinkedIn/Reddit Adapter
-│   │   ├── utils/               # logger, rate-limit, slug, keyword-filter, cache
+│   │   ├── utils/               # logger, rate-limit, slug, cache
 │   │   └── telegram.ts          # Alert-Helper
 │   └── workers/                 # BullMQ Worker (rss-fetch, ai-extract, social-post, newsletter-send, maintenance)
 └── public/
