@@ -85,7 +85,7 @@ const AiDataSchema = z.object({
   summary_en: z.string().min(1),
   summary_de: z.string().min(1),
   severance_weeks: z.number().int().nullable(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
 });
 
 const AiResponseSchema = z.object({
@@ -272,9 +272,31 @@ async function handleExtract(job: Job<ExtractPayload>) {
 
   const data = aiResponse.data;
 
+  const articleDate = article.publishedAt
+    ? article.publishedAt.toISOString().slice(0, 10)
+    : null;
+  const finalDate = data.date ?? articleDate;
+
+  if (!finalDate) {
+    // TODO: switch to logger.warn when structured logging is wired up in workers
+    console.warn(
+      `[ai-extract] Haiku returned null date and article ${articleId} has no publishedAt; skipping layoff creation for "${data.company_name}"`,
+    );
+    await db
+      .update(rssArticles)
+      .set({
+        isRelevant: false,
+        relevanceReasoning:
+          "Haiku returned null date and article has no publishedAt fallback",
+        processedAt: new Date(),
+      })
+      .where(eq(rssArticles.id, articleId));
+    return { articleId, relevant: false, reason: "missing_date" };
+  }
+
   const companyId = await findOrCreateCompany(data.company_name, data.country);
 
-  const duplicateId = await findDuplicateLayoff(companyId, data.date);
+  const duplicateId = await findDuplicateLayoff(companyId, finalDate);
   if (duplicateId) {
     await db
       .update(rssArticles)
@@ -301,7 +323,7 @@ async function handleExtract(job: Job<ExtractPayload>) {
     .insert(layoffs)
     .values({
       companyId,
-      date: data.date,
+      date: finalDate,
       affectedCount: data.affected_count,
       affectedPercentage:
         data.affected_percentage != null
